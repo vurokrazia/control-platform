@@ -129,3 +129,11 @@ coverage/
 
 # Documentation build
 docs/build/
+
+# Android project files
+VuroControl/build/
+VuroControl/app/build/
+VuroControl/local.properties
+VuroControl/.gradle/
+*.apk
+*.aab
