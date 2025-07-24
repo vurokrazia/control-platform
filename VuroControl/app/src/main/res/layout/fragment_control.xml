@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black"
+    tools:context=".ui.control.ControlFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+
+        <!-- Estado del dispositivo - FIXED HEIGHT -->
+        <TextView
+            android:id="@+id/text_device_status"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:text="@string/device_status_no_connection"
+            android:textAlignment="center"
+            android:textSize="16sp"
+            android:textColor="@android:color/holo_red_dark"
+            android:layout_marginBottom="8dp"
+            android:gravity="center"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <!-- Último comando - REMOVED TO PREVENT LAYOUT BREAKING -->
+        <TextView
+            android:id="@+id/text_last_command"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:text=""
+            android:visibility="gone"
+            android:layout_marginBottom="0dp" />
+
+        <!-- Mensaje de ayuda - FIXED HEIGHT -->
+        <TextView
+            android:id="@+id/text_help_message"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="@string/help_message_connect_device"
+            android:textAlignment="center"
+            android:textSize="14sp"
+            android:textColor="@android:color/holo_orange_light"
+            android:layout_marginBottom="16dp"
+            android:gravity="center"
+            android:maxLines="3"
+            android:ellipsize="end" />
+
+
+        <!-- Layout principal de controles -->
+        <LinearLayout
+            android:id="@+id/layout_controls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:alpha="0.5">
+
+            <!-- Control direccional superior - W (Adelante) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="8dp">
+
+                <Button
+                    android:id="@+id/btn_forward"
+                    android:layout_width="120dp"
+                    android:layout_height="60dp"
+                    android:text="@string/btn_forward"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:backgroundTint="@android:color/holo_green_dark"
+                    android:textColor="@android:color/white" />
+
+            </LinearLayout>
+
+            <!-- Control direccional medio - A (Izquierda) y D (Derecha) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="8dp">
+
+                <Button
+                    android:id="@+id/btn_left"
+                    android:layout_width="120dp"
+                    android:layout_height="60dp"
+                    android:text="@string/btn_left"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:backgroundTint="@android:color/holo_blue_dark"
+                    android:textColor="@android:color/white"
+                    android:layout_marginEnd="16dp" />
+
+                <Button
+                    android:id="@+id/btn_right"
+                    android:layout_width="120dp"
+                    android:layout_height="60dp"
+                    android:text="@string/btn_right"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:backgroundTint="@android:color/holo_blue_dark"
+                    android:textColor="@android:color/white"
+                    android:layout_marginStart="16dp" />
+
+            </LinearLayout>
+
+            <!-- Control direccional inferior - S (Atrás) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="16dp">
+
+                <Button
+                    android:id="@+id/btn_backward"
+                    android:layout_width="120dp"
+                    android:layout_height="60dp"
+                    android:text="@string/btn_backward"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:backgroundTint="@android:color/holo_purple"
+                    android:textColor="@android:color/white" />
+
+            </LinearLayout>
+
+            <!-- Control de velocidad -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp">
+
+                <Button
+                    android:id="@+id/btn_speed_down"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:text="@string/btn_speed_down"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:backgroundTint="@android:color/holo_orange_dark"
+                    android:textColor="@android:color/white"
+                    android:layout_marginEnd="8dp" />
+
+                <Button
+                    android:id="@+id/btn_speed_up"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:text="@string/btn_speed_up"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:backgroundTint="@android:color/holo_green_light"
+                    android:textColor="@android:color/black"
+                    android:layout_marginStart="8dp" />
+
+            </LinearLayout>
+
+            <!-- Modo Turbo y Ayuda -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <Button
+                    android:id="@+id/btn_turbo"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:text="@string/btn_turbo"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:backgroundTint="@android:color/holo_orange_light"
+                    android:textColor="@android:color/black"
+                    android:layout_marginEnd="8dp" />
+
+                <Button
+                    android:id="@+id/btn_help"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:text="@string/btn_help"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:backgroundTint="@android:color/holo_blue_light"
+                    android:textColor="@android:color/black"
+                    android:layout_marginStart="8dp" />
+
+            </LinearLayout>
+
+            <!-- Botón de emergencia -->
+            <Button
+                android:id="@+id/btn_emergency_stop"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:text="@string/btn_emergency_stop"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:backgroundTint="@android:color/holo_red_dark"
+                android:textColor="@android:color/white" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+</ScrollView>

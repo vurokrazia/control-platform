@@ -1,0 +1,74 @@
+<resources>
+    <string name="app_name">VuroControl</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="title_control">Control</string>
+    <string name="device_status_no_connection">❌ Sin conexión</string>
+    <string name="last_command_none">Último: Ninguno</string>
+    <string name="help_message_connect_device">💡 Ve a Dashboard para conectar un dispositivo Bluetooth</string>
+    <string name="btn_forward">⬆️
+W
+ADELANTE</string>
+    <string name="btn_left">⬅️
+A
+IZQUIERDA</string>
+    <string name="btn_right">➡️
+D
+DERECHA</string>
+    <string name="btn_backward">⬇️
+S
+ATRÁS</string>
+    <string name="btn_speed_down">⚡ -
+VELOCIDAD -</string>
+    <string name="btn_speed_up">⚡ +
+VELOCIDAD +</string>
+    <string name="btn_turbo">🚀 T
+TURBO</string>
+    <string name="btn_help">❓ ?
+AYUDA</string>
+    <string name="btn_emergency_stop">🛑 X - PARAR EMERGENCIA 🛑</string>
+    <string name="search_bluetooth_devices">Buscar Dispositivos Bluetooth</string>
+    <string name="disconnected">Desconectado</string>
+    <string name="connected_none">Conectado: Ninguno</string>
+    <string name="search_devices">Buscar Dispositivos</string>
+    <string name="disconnect">Desconectar</string>
+    <string name="found_devices">Dispositivos encontrados:</string>
+    <string name="arduino_control">Control de Arduino</string>
+    <string name="no_connection_go_to_dashboard">❌ Sin conexión - Ve a Dashboard para conectar</string>
+    <string name="device_none">Dispositivo: Ninguno</string>
+    <string name="last_command">Último comando: Ninguno</string>
+    <string name="led_control">Control de LED</string>
+    <string name="led_on">LED ON</string>
+    <string name="led_off">LED OFF</string>
+    <string name="motor_control">Control de Motor</string>
+    <string name="start">START</string>
+    <string name="stop">STOP</string>
+    <string name="servo_control">Control de Servo</string>
+    <string name="servo_0">0°</string>
+    <string name="servo_90">90°</string>
+    <string name="servo_180">180°</string>
+    <string name="emergency_stop">🚨 PARADA DE EMERGENCIA 🚨</string>
+    <string name="bluetooth_messages">📨 MENSAJES BLUETOOTH</string>
+    <string name="clear_all_messages">Borrar todos los mensajes</string>
+    <string name="total_messages">Total: 0 mensajes</string>
+    <string name="unread_messages">Sin leer: 0</string>
+    <string name="no_messages">📭 No hay mensajes
+
+Los mensajes Bluetooth aparecerán aquí cuando se reciban.</string>
+    <string name="message_type">📨</string>
+    <string name="timestamp">12:34:56</string>
+    <string name="position">#1</string>
+    <string name="device_name">Arduino</string>
+    <string name="example_message">Mensaje de ejemplo</string>
+    <string name="device_address">00:11:22:33:44:55</string>
+    <string name="dialog_delete_title">Borrar todos los mensajes</string>
+    <string name="dialog_delete_message">¿Estás seguro de que quieres borrar todos los mensajes? Esta acción no se puede deshacer.</string>
+    <string name="dialog_delete_confirm">Borrar</string>
+    <string name="dialog_cancel">Cancelar</string>
+    <string name="messages_deleted">Todos los mensajes han sido borrados</string>
+    <string name="error_deleting_messages">Error al borrar mensajes: %s</string>
+    <string name="loading_more_messages">⏳ Cargando más mensajes...</string>
+    <string name="loading_data">⏳ Cargando datos...</string>
+    <string name="messages_loaded_all">Total: %d mensajes (todos cargados)</string>
+</resources>

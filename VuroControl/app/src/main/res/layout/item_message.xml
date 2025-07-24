@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="4dp"
+    app:cardBackgroundColor="@android:color/darker_gray"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <!-- Header with timestamp -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:id="@+id/text_message_type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/message_type"
+                android:textSize="16sp"
+                android:textColor="@android:color/holo_green_light" />
+
+            <TextView
+                android:id="@+id/text_timestamp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/timestamp"
+                android:textColor="@android:color/holo_blue_light"
+                android:textSize="12sp"
+                android:layout_marginStart="8dp"
+                tools:text="12:34:56" />
+
+            <TextView
+                android:id="@+id/text_position"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/position"
+                android:textColor="@android:color/holo_red_light"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:layout_marginStart="8dp"
+                android:background="@android:color/black"
+                android:padding="2dp"
+                tools:text="#1" />
+
+            <TextView
+                android:id="@+id/text_device_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/device_name"
+                android:textColor="@android:color/holo_orange_light"
+                android:textSize="10sp"
+                android:layout_marginStart="8dp"
+                android:visibility="gone"
+                tools:text="Arduino"
+                tools:visibility="visible" />
+
+        </LinearLayout>
+
+        <!-- Message content -->
+        <TextView
+            android:id="@+id/text_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/example_message"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:lineSpacingExtra="2dp"
+            tools:text="Mensaje de ejemplo del dispositivo Bluetooth" />
+
+        <!-- Device address (small text) -->
+        <TextView
+            android:id="@+id/text_device_address"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/device_address"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="10sp"
+            android:layout_marginTop="4dp"
+            android:visibility="gone"
+            tools:text="00:11:22:33:44:55"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

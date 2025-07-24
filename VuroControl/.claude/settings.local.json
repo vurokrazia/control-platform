@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:guides.codepath.com)"
+    ],
+    "deny": []
+  }
+}

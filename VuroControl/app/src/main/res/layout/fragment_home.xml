@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.home.HomeFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Título -->
+        <TextView
+            android:id="@+id/text_home"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/arduino_control"
+            android:textAlignment="center"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Info de conexión -->
+        <TextView
+            android:id="@+id/text_connection_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/no_connection_go_to_dashboard"
+            android:textAlignment="center"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Nombre del dispositivo -->
+        <TextView
+            android:id="@+id/text_device_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/device_none"
+            android:textAlignment="center"
+            android:textSize="12sp"
+            android:visibility="gone"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Estado de conexión -->
+        <TextView
+            android:id="@+id/text_connection_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/disconnected"
+            android:textAlignment="center"
+            android:textSize="14sp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Último comando -->
+        <TextView
+            android:id="@+id/text_last_command"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/last_command"
+            android:textAlignment="center"
+            android:textSize="12sp"
+            android:textStyle="italic"
+            android:visibility="gone"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Layout de controles -->
+        <LinearLayout
+            android:id="@+id/layout_controls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:alpha="0.5">
+
+            <!-- Control de LED -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/led_control"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <Button
+                    android:id="@+id/btn_led_on"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/led_on"
+                    android:backgroundTint="@android:color/holo_green_light"
+                    android:layout_marginEnd="8dp" />
+
+                <Button
+                    android:id="@+id/btn_led_off"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/led_off"
+                    android:backgroundTint="@android:color/holo_red_light"
+                    android:layout_marginStart="8dp" />
+
+            </LinearLayout>
+
+            <!-- Control de Motor -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/motor_control"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <Button
+                    android:id="@+id/btn_motor_start"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/start"
+                    android:backgroundTint="@android:color/holo_blue_light"
+                    android:layout_marginEnd="8dp" />
+
+                <Button
+                    android:id="@+id/btn_motor_stop"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/stop"
+                    android:backgroundTint="@android:color/holo_orange_light"
+                    android:layout_marginStart="8dp" />
+
+            </LinearLayout>
+
+            <!-- Control de Servo -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/servo_control"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <Button
+                    android:id="@+id/btn_servo_0"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/servo_0"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btn_servo_90"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/servo_90"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btn_servo_180"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/servo_180"
+                    android:layout_marginStart="4dp" />
+
+            </LinearLayout>
+
+            <!-- Botón de Emergencia -->
+            <Button
+                android:id="@+id/btn_emergency"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:text="@string/emergency_stop"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:backgroundTint="@android:color/holo_red_dark"
+                android:textColor="@android:color/white" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>
