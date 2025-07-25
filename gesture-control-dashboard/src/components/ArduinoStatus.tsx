@@ -8,6 +8,7 @@ const ArduinoStatus: React.FC = () => {
     isConnected,
     isLoadingStatus,
     refreshStatus,
+    deviceId,
   } = useArduinoContext();
 
   const formatTimestamp = (timestamp: string) => {
@@ -47,9 +48,16 @@ const ArduinoStatus: React.FC = () => {
         alignItems: 'center',
         marginBottom: '20px'
       }}>
-        <h3 style={{ margin: 0, color: '#333' }}>
-          📊 Estado del Arduino
-        </h3>
+        <div>
+          <h3 style={{ margin: 0, color: '#333' }}>
+            📊 Estado del Arduino
+          </h3>
+          {deviceId && (
+            <small style={{ color: '#666', fontSize: '0.8rem' }}>
+              Device ID: <code style={{ backgroundColor: '#e9ecef', padding: '2px 6px', borderRadius: '3px' }}>{deviceId}</code>
+            </small>
+          )}
+        </div>
         <button
           onClick={refreshStatus}
           disabled={isLoadingStatus}

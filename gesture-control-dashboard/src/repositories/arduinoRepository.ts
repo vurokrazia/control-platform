@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Configuración base de axios
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL = 'http://localhost:3001/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -70,10 +70,10 @@ class ArduinoRepository {
   // Listar puertos disponibles
   async getPorts(): Promise<Port[]> {
     try {
-      const response = await api.get<ApiResponse<Port[]>>('/arduino/ports');
+      const response = await api.get<ApiResponse<Port[]>>('/serial-ports');
       
-      if (response.data.success && response.data.ports) {
-        return response.data.ports;
+      if (response.data.success && response.data.data) {
+        return response.data.data;
       }
       
       throw new Error(response.data.error || 'Error obteniendo puertos');
@@ -88,15 +88,21 @@ class ArduinoRepository {
   }
 
   // Conectar al Arduino
-  async connect(port: string, baudRate: number = 9600): Promise<string> {
+  async connect(port: string, baudRate: number = 9600): Promise<{ message: string; deviceId: string }> {
     try {
-      const response = await api.post<ApiResponse>('/arduino/connect', {
+      // Generate a unique device ID based on port and timestamp
+      const deviceId = `device-${port.replace(/[^a-zA-Z0-9]/g, '_')}-${Date.now()}`;
+      
+      const response = await api.post<ApiResponse<{ deviceId: string; port: string; baudRate: number }>>(`/devices/${deviceId}/connect`, {
         port,
         baudRate,
       });
 
-      if (response.data.success) {
-        return response.data.message || 'Conectado exitosamente';
+      if (response.data.success && response.data.data) {
+        return {
+          message: response.data.message || 'Conectado exitosamente',
+          deviceId: response.data.data.deviceId
+        };
       }
 
       throw new Error(response.data.error || 'Error conectando al Arduino');
@@ -111,9 +117,9 @@ class ArduinoRepository {
   }
 
   // Desconectar del Arduino
-  async disconnect(): Promise<string> {
+  async disconnect(deviceId: string): Promise<string> {
     try {
-      const response = await api.post<ApiResponse>('/arduino/disconnect');
+      const response = await api.post<ApiResponse>(`/devices/${deviceId}/disconnect`);
 
       if (response.data.success) {
         return response.data.message || 'Desconectado exitosamente';
@@ -131,15 +137,15 @@ class ArduinoRepository {
   }
 
   // Obtener estado de conexión
-  async getStatus(): Promise<ArduinoStatus> {
+  async getStatus(deviceId: string): Promise<ArduinoStatus> {
     try {
-      const response = await api.get<ApiResponse<{ status: ArduinoStatus }>>('/arduino/status');
+      const response = await api.get<ApiResponse<{ status: ArduinoStatus }>>(`/devices/${deviceId}/status`);
 
       console.log('📊 Raw status response:', response.data);
 
-      if (response.data.success && response.data.status) {
-        console.log('📊 Parsed status:', response.data.status);
-        return response.data.status;
+      if (response.data.success && response.data.data) {
+        console.log('📊 Parsed status:', response.data.data.status);
+        return response.data.data.status;
       }
 
       throw new Error(response.data.error || 'Error obteniendo estado');
@@ -154,9 +160,9 @@ class ArduinoRepository {
   }
 
   // Enviar datos al Arduino
-  async sendData(data: string): Promise<string> {
+  async sendData(deviceId: string, data: string): Promise<string> {
     try {
-      const response = await api.post<ApiResponse>('/arduino/send', { data });
+      const response = await api.post<ApiResponse>(`/devices/${deviceId}/data`, { data });
 
       if (response.data.success) {
         return response.data.message || 'Datos enviados correctamente';
@@ -174,15 +180,15 @@ class ArduinoRepository {
   }
 
   // Leer último dato recibido
-  async readData(): Promise<ArduinoData | null> {
+  async readData(deviceId: string): Promise<ArduinoData | null> {
     try {
-      const response = await api.get<ApiResponse<ArduinoData>>('/arduino/read');
+      const response = await api.get<ApiResponse<ArduinoData>>(`/devices/${deviceId}/data/latest`);
 
-      if (response.data.success) {
-        return response.data.data || null;
+      if (response.data.success && response.data.data) {
+        return response.data.data;
       }
 
-      throw new Error(response.data.error || 'Error leyendo datos');
+      return null;
     } catch (error) {
       console.error('Error reading data:', error);
       throw new Error(
@@ -194,10 +200,10 @@ class ArduinoRepository {
   }
 
   // Obtener historial de datos
-  async getHistory(limit: number = 10): Promise<ArduinoData[]> {
+  async getHistory(deviceId: string, limit: number = 10): Promise<ArduinoData[]> {
     try {
       const response = await api.get<ApiResponse<ArduinoData[]>>(
-        `/arduino/history?limit=${limit}`
+        `/devices/${deviceId}/data?limit=${limit}`
       );
 
       if (response.data.success && response.data.data) {
@@ -216,9 +222,9 @@ class ArduinoRepository {
   }
 
   // Enviar comando específico
-  async sendCommand(command: string, value?: string | number): Promise<string> {
+  async sendCommand(deviceId: string, command: string, value?: string | number): Promise<string> {
     try {
-      const response = await api.post<ApiResponse>('/arduino/command', {
+      const response = await api.post<ApiResponse>(`/devices/${deviceId}/commands`, {
         command,
         value,
       });
@@ -241,7 +247,7 @@ class ArduinoRepository {
   // Verificar si el servidor está disponible
   async checkConnection(): Promise<boolean> {
     try {
-      const response = await api.get('/health');
+      const response = await api.get('/');
       return response.status === 200;
     } catch (error) {
       console.error('Server not available:', error);
