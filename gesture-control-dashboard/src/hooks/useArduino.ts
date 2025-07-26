@@ -3,6 +3,9 @@ import { arduinoRepository } from '../repositories/arduinoRepository';
 import type { Port, ArduinoStatus, ArduinoData } from '../repositories/arduinoRepository';
 
 export interface UseArduinoState {
+  // Device management
+  deviceId: string | null;
+  
   // Puertos
   ports: Port[];
   selectedPort: string | null;
@@ -33,6 +36,7 @@ export interface UseArduinoState {
 
 export const useArduino = () => {
   const [state, setState] = useState<UseArduinoState>({
+    deviceId: null,
     ports: [],
     selectedPort: null,
     isConnected: false,
@@ -108,15 +112,16 @@ export const useArduino = () => {
 
     try {
       console.log(`🔌 Conectando a ${port}...`);
-      const message = await arduinoRepository.connect(port, baudRate);
-      console.log(`✅ Respuesta de conexión: ${message}`);
+      const response = await arduinoRepository.connect(port, baudRate);
+      console.log(`✅ Respuesta de conexión: ${response.message}, Device ID: ${response.deviceId}`);
       
-      // Marcar como conectado inmediatamente
+      // Marcar como conectado inmediatamente y guardar device ID
       setState(prev => ({ 
         ...prev, 
         isConnecting: false,
-        isConnected: true, // Marcar como conectado inmediatamente
+        isConnected: true,
         selectedPort: port,
+        deviceId: response.deviceId, // Store the device ID from API response
         connectionError: null,
         error: null
       }));
@@ -125,7 +130,7 @@ export const useArduino = () => {
       setTimeout(async () => {
         try {
           console.log('🔄 Obteniendo estado después de conectar...');
-          const status = await arduinoRepository.getStatus();
+          const status = await arduinoRepository.getStatus(response.deviceId);
           console.log('📊 Estado después de conectar:', status);
           
           setState(prev => ({ 
@@ -139,7 +144,7 @@ export const useArduino = () => {
         }
       }, 1500);
 
-      return message;
+      return response.message;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error conectando';
       console.error('❌ Error conectando:', errorMessage);
@@ -153,20 +158,25 @@ export const useArduino = () => {
       }));
       throw error;
     }
-  }, []);
+  }, [state.deviceId]);
 
   // Desconectar del Arduino
   const disconnect = useCallback(async () => {
+    if (!state.deviceId) {
+      throw new Error('No device connected');
+    }
+
     setState(prev => ({ ...prev, isConnecting: true }));
 
     try {
-      const message = await arduinoRepository.disconnect();
+      const message = await arduinoRepository.disconnect(state.deviceId);
       
       setState(prev => ({ 
         ...prev, 
         isConnecting: false,
         isConnected: false,
         selectedPort: null,
+        deviceId: null, // Clear device ID on disconnect
         status: null,
         lastData: null,
         connectionError: null,
@@ -185,21 +195,25 @@ export const useArduino = () => {
       console.error('Error disconnecting:', errorMessage);
       throw error;
     }
-  }, []);
+  }, [state.deviceId]);
 
   // Actualizar estado
   const refreshStatus = useCallback(async () => {
     setState(prev => {
-      if (!prev.isServerAvailable) {
-        console.log('⚠️ Servidor no disponible, saltando refreshStatus');
+      if (!prev.isServerAvailable || !prev.deviceId) {
+        console.log('⚠️ Servidor no disponible o sin dispositivo conectado, saltando refreshStatus');
         return prev;
       }
       return { ...prev, isLoadingStatus: true };
     });
 
+    if (!state.deviceId) {
+      return;
+    }
+
     try {
       console.log('🔄 Obteniendo estado del Arduino...');
-      const status = await arduinoRepository.getStatus();
+      const status = await arduinoRepository.getStatus(state.deviceId);
       console.log('📊 Estado recibido:', status);
       
       setState(prev => {
@@ -227,14 +241,18 @@ export const useArduino = () => {
         // NO cambiar isConnected aquí, mantener el estado actual
       }));
     }
-  }, []); // Sin dependencias para evitar re-creaciones innecesarias
+  }, [state.deviceId]); // Sin dependencias para evitar re-creaciones innecesarias
 
   // Enviar datos
   const sendData = useCallback(async (data: string) => {
+    if (!state.deviceId) {
+      throw new Error('No device connected');
+    }
+
     setState(prev => ({ ...prev, isSendingData: true, error: null }));
 
     try {
-      const message = await arduinoRepository.sendData(data);
+      const message = await arduinoRepository.sendData(state.deviceId, data);
       
       setState(prev => ({ ...prev, isSendingData: false }));
       
@@ -250,12 +268,16 @@ export const useArduino = () => {
       console.error('Error sending data:', errorMessage);
       throw error;
     }
-  }, []);
+  }, [state.deviceId]);
 
   // Leer datos
   const readData = useCallback(async () => {
+    if (!state.deviceId) {
+      throw new Error('No device connected');
+    }
+
     try {
-      const data = await arduinoRepository.readData();
+      const data = await arduinoRepository.readData(state.deviceId);
       setState(prev => ({ ...prev, lastData: data }));
       return data;
     } catch (error) {
@@ -264,7 +286,7 @@ export const useArduino = () => {
       console.error('Error reading data:', errorMessage);
       throw error;
     }
-  }, []);
+  }, [state.deviceId]);
 
   // Limpiar errores
   const clearError = useCallback(() => {
@@ -290,8 +312,8 @@ export const useArduino = () => {
 
   // Efecto para refrescar estado periódicamente si está conectado
   useEffect(() => {
-    // Solo ejecutar si hay un puerto seleccionado (indica intento de conexión)
-    if (!state.selectedPort || !state.isServerAvailable) return;
+    // Solo ejecutar si hay un dispositivo conectado
+    if (!state.deviceId || !state.isServerAvailable) return;
 
     console.log('🔄 Iniciando monitoreo automático del estado...');
     
@@ -306,7 +328,7 @@ export const useArduino = () => {
       console.log('🛑 Deteniendo monitoreo automático del estado');
       clearInterval(interval);
     };
-  }, [state.selectedPort, state.isServerAvailable, refreshStatus]);
+  }, [state.deviceId, state.isServerAvailable, refreshStatus]);
 
   return {
     // Estado
