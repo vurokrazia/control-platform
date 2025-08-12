@@ -39,8 +39,8 @@ export const useAuthStore = create<AuthState>()(
         try {
           const result = await authRepository.login({ email, password });
           
-          if (result.success && result.data) {
-            const { user, token } = result.data;
+          if (result.success && result.user && result.token) {
+            const { user, token } = result;
             
             // Store token in localStorage
             localStorage.setItem('auth_token', token);
@@ -76,8 +76,8 @@ export const useAuthStore = create<AuthState>()(
         try {
           const result = await authRepository.register({ name, email, password });
           
-          if (result.success && result.data) {
-            const { user, token } = result.data;
+          if (result.success && result.user && result.token) {
+            const { user, token } = result;
             
             // Store token in localStorage
             localStorage.setItem('auth_token', token);
@@ -138,9 +138,9 @@ export const useAuthStore = create<AuthState>()(
         try {
           const result = await authRepository.getProfile();
           
-          if (result.success && result.data) {
+          if (result.success && result.user) {
             set({
-              user: result.data.user,
+              user: result.user,
               isLoading: false,
               error: null
             });

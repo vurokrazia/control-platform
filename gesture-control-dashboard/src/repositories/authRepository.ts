@@ -24,17 +24,16 @@ export interface User {
 
 export interface AuthResponse {
   success: boolean;
-  data?: {
-    user: User;
-    token: string;
-    expiresAt: string;
-  };
+  user?: User;
+  token?: string;
   message?: string;
   error?: string;
+  apiVersion?: string;
+  namespace?: string;
 }
 
 export class AuthRepository {
-  private baseURL = `${API_BASE_URL}/auth`;
+  private baseURL = `${API_BASE_URL}/v1/auth`;
 
   async login(data: LoginData): Promise<AuthResponse> {
     try {
@@ -84,7 +83,16 @@ export class AuthRepository {
       const response = await axios.get(`${this.baseURL}/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      return response.data;
+      
+      // Handle both possible response formats
+      const data = response.data;
+      if (data.success && data.user) {
+        return data; // Direct user object
+      } else if (data.success && data.data?.user) {
+        return { ...data, user: data.data.user }; // Wrapped in data
+      } else {
+        return data;
+      }
     } catch (error: any) {
       return {
         success: false,
