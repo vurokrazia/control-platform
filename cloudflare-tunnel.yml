@@ -1,0 +1,22 @@
+# Option 1: Quick start without domain (uses free *.trycloudflare.com)
+# Just run: cloudflared tunnel --url http://localhost:5173
+# and: cloudflared tunnel --url http://localhost:3002
+
+# Option 2: Named tunnel with custom domain (requires domain setup)
+tunnel: arduino-mqtt-dashboard
+credentials-file: C:\Users\jeesu\.cloudflared\cert.pem
+
+ingress:
+  # Frontend - React Vite dev server
+  - hostname: frontend-arduino.your-domain.com
+    service: http://localhost:5173
+    
+  # API - Node.js Express server  
+  - hostname: api-arduino.your-domain.com
+    service: http://localhost:3002
+    
+  # Catch-all rule (required)
+  - service: http_status:404
+
+# Optional: Enable metrics and logging
+metrics: 0.0.0.0:8081
