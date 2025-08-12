@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { useTranslation } from 'react-i18next';
 
 interface FormErrors {
   email?: string;
@@ -12,6 +13,7 @@ export const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isLoading, error, clearError, isAuthenticated } = useAuthStore();
+  const { t } = useTranslation();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -34,16 +36,16 @@ export const Login: React.FC = () => {
     
     // Email validation
     if (!formData.email.trim()) {
-      errors.email = 'Email is required';
+      errors.email = t('auth.validation.emailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Please enter a valid email address';
+      errors.email = t('auth.validation.emailInvalid');
     }
     
     // Password validation
     if (!formData.password) {
-      errors.password = 'Password is required';
+      errors.password = t('auth.validation.passwordRequired');
     } else if (formData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
+      errors.password = t('auth.validation.passwordMinLength');
     }
     
     setFormErrors(errors);
@@ -86,8 +88,8 @@ export const Login: React.FC = () => {
         <Col xs={12} sm={8} md={6} lg={4}>
           <Card className="shadow-lg border-0">
             <Card.Header className="bg-primary text-white text-center py-4">
-              <h3 className="mb-0">🎮 Gesture Control</h3>
-              <p className="mb-0 mt-2">Sign in to your account</p>
+              <h3 className="mb-0">🎮 {t('app.title')}</h3>
+              <p className="mb-0 mt-2">{t('auth.login.title')}</p>
             </Card.Header>
             
             <Card.Body className="p-4">
@@ -99,14 +101,14 @@ export const Login: React.FC = () => {
               
               <Form onSubmit={handleSubmit}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Email Address</Form.Label>
+                  <Form.Label>{t('auth.login.email')}</Form.Label>
                   <Form.Control
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
                     isInvalid={!!formErrors.email}
-                    placeholder="Enter your email"
+                    placeholder={t('auth.login.emailPlaceholder')}
                     disabled={isLoading}
                   />
                   <Form.Control.Feedback type="invalid">
@@ -115,7 +117,7 @@ export const Login: React.FC = () => {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Password</Form.Label>
+                  <Form.Label>{t('auth.login.password')}</Form.Label>
                   <div className="position-relative">
                     <Form.Control
                       type={showPassword ? 'text' : 'password'}
@@ -123,7 +125,7 @@ export const Login: React.FC = () => {
                       value={formData.password}
                       onChange={handleInputChange}
                       isInvalid={!!formErrors.password}
-                      placeholder="Enter your password"
+                      placeholder={t('auth.login.passwordPlaceholder')}
                       disabled={isLoading}
                     />
                     <Button
@@ -151,10 +153,10 @@ export const Login: React.FC = () => {
                     {isLoading ? (
                       <>
                         <Spinner size="sm" className="me-2" />
-                        Signing in...
+                        {t('auth.login.loading')}
                       </>
                     ) : (
-                      'Sign In'
+                      t('auth.login.button')
                     )}
                   </Button>
                 </div>
@@ -163,9 +165,9 @@ export const Login: React.FC = () => {
             
             <Card.Footer className="text-center py-3 bg-light">
               <p className="mb-0">
-                Don't have an account?{' '}
+                {t('auth.login.noAccount')}{' '}
                 <Link to="/register" className="text-primary text-decoration-none fw-bold">
-                  Create one here
+                  {t('auth.login.signUpHere')}
                 </Link>
               </p>
             </Card.Footer>

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Container, Row, Col, Nav, Navbar, Button, Dropdown } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { useTranslation } from 'react-i18next';
+import { LanguageSelector } from './LanguageSelector';
 
 // Existing components
 import HandTracker from './HandTracker';
@@ -22,6 +24,7 @@ export const ControlPage: React.FC<ControlPageProps> = ({
 }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'hands' | 'arduino' | 'mqtt'>(initialTab);
   const [showMqttModal, setShowMqttModal] = useState(false);
 
@@ -40,7 +43,7 @@ export const ControlPage: React.FC<ControlPageProps> = ({
             role="button"
             onClick={() => navigate('/dashboard')}
           >
-            🤖 Arduino & Hand Control
+            🤖 {t('app.title')}
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
@@ -50,14 +53,14 @@ export const ControlPage: React.FC<ControlPageProps> = ({
                 onClick={() => setActiveTab('arduino')}
                 className="fw-bold"
               >
-                🔌 Arduino Connection
+                🔌 {t('navigation.devices')}
               </Nav.Link>
               <Nav.Link 
                 active={activeTab === 'mqtt'}
                 onClick={() => setActiveTab('mqtt')}
                 className="fw-bold"
               >
-                📡 MQTT Control
+                📡 {t('mqtt.connection.title')}
               </Nav.Link>
               <Nav.Link 
                 active={activeTab === 'hands'}
@@ -71,8 +74,11 @@ export const ControlPage: React.FC<ControlPageProps> = ({
                 onClick={() => setShowMqttModal(true)}
                 className="ms-2"
               >
-                📡 MQTT Topics
+                📡 {t('mqtt.topics.title')}
               </Button>
+            </Nav>
+            <Nav className="me-3">
+              <LanguageSelector />
             </Nav>
             
             {/* User Menu */}
@@ -89,14 +95,14 @@ export const ControlPage: React.FC<ControlPageProps> = ({
                   </Dropdown.Header>
                   <Dropdown.Divider />
                   <Dropdown.Item onClick={() => navigate('/dashboard')}>
-                    🏠 Dashboard
+                    🏠 {t('navigation.dashboard')}
                   </Dropdown.Item>
                   <Dropdown.Item onClick={() => navigate('/profile')}>
-                    👤 Profile Settings
+                    👤 {t('navigation.settings')}
                   </Dropdown.Item>
                   <Dropdown.Divider />
                   <Dropdown.Item onClick={handleLogout} className="text-danger">
-                    🚪 Sign Out
+                    🚪 {t('navigation.logout')}
                   </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>

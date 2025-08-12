@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner, ProgressBar } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { useTranslation } from 'react-i18next';
 
 interface FormErrors {
   name?: string;
@@ -13,6 +14,7 @@ interface FormErrors {
 export const Register: React.FC = () => {
   const navigate = useNavigate();
   const { register, isLoading, error, clearError, isAuthenticated } = useAuthStore();
+  const { t } = useTranslation();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -44,10 +46,10 @@ export const Register: React.FC = () => {
   };
 
   const getPasswordStrengthLabel = (strength: number): string => {
-    if (strength < 25) return 'Very Weak';
-    if (strength < 50) return 'Weak';
-    if (strength < 75) return 'Good';
-    return 'Strong';
+    if (strength < 25) return t('auth.register.passwordStrengthVeryWeak');
+    if (strength < 50) return t('auth.register.passwordStrengthWeak');
+    if (strength < 75) return t('auth.register.passwordStrengthGood');
+    return t('auth.register.passwordStrengthStrong');
   };
 
   const getPasswordStrengthVariant = (strength: number): string => {
@@ -62,30 +64,30 @@ export const Register: React.FC = () => {
     
     // Name validation
     if (!formData.name.trim()) {
-      errors.name = 'Full name is required';
+      errors.name = t('auth.validation.nameRequired');
     } else if (formData.name.trim().length < 2) {
-      errors.name = 'Name must be at least 2 characters';
+      errors.name = t('auth.validation.nameMinLength');
     }
     
     // Email validation
     if (!formData.email.trim()) {
-      errors.email = 'Email is required';
+      errors.email = t('auth.validation.emailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Please enter a valid email address';
+      errors.email = t('auth.validation.emailInvalid');
     }
     
     // Password validation
     if (!formData.password) {
-      errors.password = 'Password is required';
+      errors.password = t('auth.validation.passwordRequired');
     } else if (formData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
+      errors.password = t('auth.validation.passwordMinLength');
     }
     
     // Confirm password validation
     if (!formData.confirmPassword) {
-      errors.confirmPassword = 'Please confirm your password';
+      errors.confirmPassword = t('auth.validation.confirmPasswordRequired');
     } else if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
+      errors.confirmPassword = t('auth.validation.passwordMismatch');
     }
     
     setFormErrors(errors);
@@ -129,8 +131,8 @@ export const Register: React.FC = () => {
         <Col xs={12} sm={10} md={8} lg={5}>
           <Card className="shadow-lg border-0">
             <Card.Header className="bg-success text-white text-center py-4">
-              <h3 className="mb-0">🎮 Gesture Control</h3>
-              <p className="mb-0 mt-2">Create your account</p>
+              <h3 className="mb-0">🎮 {t('app.title')}</h3>
+              <p className="mb-0 mt-2">{t('auth.register.title')}</p>
             </Card.Header>
             
             <Card.Body className="p-4">
@@ -142,14 +144,14 @@ export const Register: React.FC = () => {
               
               <Form onSubmit={handleSubmit}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Full Name</Form.Label>
+                  <Form.Label>{t('auth.register.fullName')}</Form.Label>
                   <Form.Control
                     type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
                     isInvalid={!!formErrors.name}
-                    placeholder="Enter your full name"
+                    placeholder={t('auth.register.namePlaceholder')}
                     disabled={isLoading}
                   />
                   <Form.Control.Feedback type="invalid">
@@ -158,14 +160,14 @@ export const Register: React.FC = () => {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Email Address</Form.Label>
+                  <Form.Label>{t('auth.register.email')}</Form.Label>
                   <Form.Control
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
                     isInvalid={!!formErrors.email}
-                    placeholder="Enter your email"
+                    placeholder={t('auth.register.emailPlaceholder')}
                     disabled={isLoading}
                   />
                   <Form.Control.Feedback type="invalid">
@@ -174,7 +176,7 @@ export const Register: React.FC = () => {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Password</Form.Label>
+                  <Form.Label>{t('auth.register.password')}</Form.Label>
                   <div className="position-relative">
                     <Form.Control
                       type={showPassword ? 'text' : 'password'}
@@ -182,7 +184,7 @@ export const Register: React.FC = () => {
                       value={formData.password}
                       onChange={handleInputChange}
                       isInvalid={!!formErrors.password}
-                      placeholder="Create a strong password"
+                      placeholder={t('auth.register.passwordPlaceholder')}
                       disabled={isLoading}
                     />
                     <Button
@@ -199,7 +201,7 @@ export const Register: React.FC = () => {
                   {formData.password && (
                     <div className="mt-2">
                       <div className="d-flex justify-content-between small mb-1">
-                        <span>Password Strength:</span>
+                        <span>{t('auth.register.passwordStrength')}</span>
                         <span className={`fw-bold text-${getPasswordStrengthVariant(passwordStrength)}`}>
                           {getPasswordStrengthLabel(passwordStrength)}
                         </span>
@@ -218,7 +220,7 @@ export const Register: React.FC = () => {
                 </Form.Group>
 
                 <Form.Group className="mb-4">
-                  <Form.Label>Confirm Password</Form.Label>
+                  <Form.Label>{t('auth.register.confirmPassword')}</Form.Label>
                   <div className="position-relative">
                     <Form.Control
                       type={showConfirmPassword ? 'text' : 'password'}
@@ -226,7 +228,7 @@ export const Register: React.FC = () => {
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
                       isInvalid={!!formErrors.confirmPassword}
-                      placeholder="Confirm your password"
+                      placeholder={t('auth.register.confirmPasswordPlaceholder')}
                       disabled={isLoading}
                     />
                     <Button
@@ -254,10 +256,10 @@ export const Register: React.FC = () => {
                     {isLoading ? (
                       <>
                         <Spinner size="sm" className="me-2" />
-                        Creating Account...
+                        {t('auth.register.loading')}
                       </>
                     ) : (
-                      'Create Account'
+                      t('auth.register.button')
                     )}
                   </Button>
                 </div>
@@ -266,9 +268,9 @@ export const Register: React.FC = () => {
             
             <Card.Footer className="text-center py-3 bg-light">
               <p className="mb-0">
-                Already have an account?{' '}
+                {t('auth.register.hasAccount')}{' '}
                 <Link to="/login" className="text-success text-decoration-none fw-bold">
-                  Sign in here
+                  {t('auth.register.signInHere')}
                 </Link>
               </p>
             </Card.Footer>

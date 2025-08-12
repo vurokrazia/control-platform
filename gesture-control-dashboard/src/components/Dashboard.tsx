@@ -2,10 +2,13 @@ import React from 'react';
 import { Container, Row, Col, Card, Button, Navbar, Nav, Dropdown } from 'react-bootstrap';
 import { useAuthStore } from '../stores/authStore';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { LanguageSelector } from './LanguageSelector';
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     await logout();
@@ -22,10 +25,13 @@ export const Dashboard: React.FC = () => {
       <Navbar bg="dark" variant="dark" expand="lg" className="mb-4">
         <Container>
           <Navbar.Brand href="#home">
-            🎮 Gesture Control Dashboard
+            🎮 {t('app.title')} {t('app.subtitle')}
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="me-auto">
+              <LanguageSelector />
+            </Nav>
             <Nav className="ms-auto">
               <Dropdown align="end">
                 <Dropdown.Toggle variant="outline-light" id="dropdown-basic">
@@ -39,14 +45,14 @@ export const Dashboard: React.FC = () => {
                   </Dropdown.Header>
                   <Dropdown.Divider />
                   <Dropdown.Item onClick={() => navigate('/profile')}>
-                    👤 Profile Settings
+                    👤 {t('navigation.settings')}
                   </Dropdown.Item>
                   <Dropdown.Item onClick={() => navigate('/mqtt')}>
-                    📡 MQTT Topics
+                    📡 {t('mqtt.topics.title')}
                   </Dropdown.Item>
                   <Dropdown.Divider />
                   <Dropdown.Item onClick={handleLogout} className="text-danger">
-                    🚪 Sign Out
+                    🚪 {t('navigation.logout')}
                   </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
@@ -59,9 +65,9 @@ export const Dashboard: React.FC = () => {
       <Container>
         <Row className="mb-4">
           <Col>
-            <h1 className="display-4">Welcome back, {user?.name?.split(' ')[0] || 'User'}! 👋</h1>
+            <h1 className="display-4">{t('dashboard.welcome')}, {user?.name?.split(' ')[0] || 'User'}! 👋</h1>
             <p className="lead text-muted">
-              Control your Arduino devices with hand gestures and manage your MQTT topics.
+              {t('dashboard.welcome')}
             </p>
           </Col>
         </Row>
@@ -74,9 +80,9 @@ export const Dashboard: React.FC = () => {
                 <div className="mb-3">
                   <span style={{ fontSize: '3rem' }}>🤚</span>
                 </div>
-                <Card.Title className="h4">Gesture Control</Card.Title>
+                <Card.Title className="h4">{t('app.title')}</Card.Title>
                 <Card.Text className="text-muted">
-                  Use hand gestures to control your Arduino devices in real-time.
+                  {t('dashboard.welcome')}
                 </Card.Text>
                 <Button 
                   variant="primary" 
@@ -84,7 +90,7 @@ export const Dashboard: React.FC = () => {
                   className="mt-auto"
                   onClick={handleNavigateToControl}
                 >
-                  Start Control Session
+                  {t('dashboard.devices.connectDevice')}
                 </Button>
               </Card.Body>
             </Card>
@@ -97,9 +103,9 @@ export const Dashboard: React.FC = () => {
                 <div className="mb-3">
                   <span style={{ fontSize: '3rem' }}>🔧</span>
                 </div>
-                <Card.Title className="h4">Device Management</Card.Title>
+                <Card.Title className="h4">{t('devices.title')}</Card.Title>
                 <Card.Text className="text-muted">
-                  Create, connect, and manage your Arduino devices.
+                  {t('devices.title')}
                 </Card.Text>
                 <Button 
                   variant="success" 
@@ -107,7 +113,7 @@ export const Dashboard: React.FC = () => {
                   className="mt-auto"
                   onClick={() => navigate('/devices')}
                 >
-                  Manage Devices
+                  {t('navigation.devices')}
                 </Button>
               </Card.Body>
             </Card>
@@ -120,9 +126,9 @@ export const Dashboard: React.FC = () => {
                 <div className="mb-3">
                   <span style={{ fontSize: '3rem' }}>📡</span>
                 </div>
-                <Card.Title className="h4">MQTT Topics</Card.Title>
+                <Card.Title className="h4">{t('mqtt.topics.title')}</Card.Title>
                 <Card.Text className="text-muted">
-                  Configure MQTT topics and monitor message flow.
+                  {t('mqtt.connection.title')}
                 </Card.Text>
                 <Button 
                   variant="info" 
@@ -130,7 +136,7 @@ export const Dashboard: React.FC = () => {
                   className="mt-auto"
                   onClick={() => navigate('/mqtt')}
                 >
-                  MQTT Dashboard
+                  {t('navigation.dashboard')}
                 </Button>
               </Card.Body>
             </Card>
@@ -143,9 +149,9 @@ export const Dashboard: React.FC = () => {
                 <div className="mb-3">
                   <span style={{ fontSize: '3rem' }}>📊</span>
                 </div>
-                <Card.Title className="h4">Analytics</Card.Title>
+                <Card.Title className="h4">{t('common.info')}</Card.Title>
                 <Card.Text className="text-muted">
-                  View usage statistics and session history.
+                  {t('common.info')}
                 </Card.Text>
                 <Button 
                   variant="warning" 
@@ -153,7 +159,7 @@ export const Dashboard: React.FC = () => {
                   className="mt-auto"
                   onClick={() => navigate('/analytics')}
                 >
-                  View Analytics
+                  {t('common.info')}
                 </Button>
               </Card.Body>
             </Card>
@@ -166,9 +172,9 @@ export const Dashboard: React.FC = () => {
                 <div className="mb-3">
                   <span style={{ fontSize: '3rem' }}>📚</span>
                 </div>
-                <Card.Title className="h4">Documentation</Card.Title>
+                <Card.Title className="h4">{t('common.info')}</Card.Title>
                 <Card.Text className="text-muted">
-                  Learn how to use the gesture control system.
+                  {t('common.info')}
                 </Card.Text>
                 <Button 
                   variant="secondary" 
@@ -176,7 +182,7 @@ export const Dashboard: React.FC = () => {
                   className="mt-auto"
                   onClick={() => window.open('/docs', '_blank')}
                 >
-                  View Docs
+                  {t('common.info')}
                 </Button>
               </Card.Body>
             </Card>
@@ -189,9 +195,9 @@ export const Dashboard: React.FC = () => {
                 <div className="mb-3">
                   <span style={{ fontSize: '3rem' }}>⚙️</span>
                 </div>
-                <Card.Title className="h4">Settings</Card.Title>
+                <Card.Title className="h4">{t('navigation.settings')}</Card.Title>
                 <Card.Text className="text-muted">
-                  Configure your account and application preferences.
+                  {t('navigation.settings')}
                 </Card.Text>
                 <Button 
                   variant="dark" 
@@ -199,7 +205,7 @@ export const Dashboard: React.FC = () => {
                   className="mt-auto"
                   onClick={() => navigate('/profile')}
                 >
-                  Account Settings
+                  {t('navigation.settings')}
                 </Button>
               </Card.Body>
             </Card>
@@ -214,23 +220,23 @@ export const Dashboard: React.FC = () => {
                 <Row className="text-center">
                   <Col md={3}>
                     <div className="h3 text-primary mb-1">👤</div>
-                    <div className="h5 mb-0">Welcome!</div>
-                    <small className="text-muted">Account Active</small>
+                    <div className="h5 mb-0">{t('dashboard.welcome')}</div>
+                    <small className="text-muted">{t('common.success')}</small>
                   </Col>
                   <Col md={3}>
                     <div className="h3 text-success mb-1">✅</div>
-                    <div className="h5 mb-0">Verified</div>
-                    <small className="text-muted">{user?.emailVerified ? 'Email Verified' : 'Email Pending'}</small>
+                    <div className="h5 mb-0">{t('common.success')}</div>
+                    <small className="text-muted">{user?.emailVerified ? t('common.success') : t('common.warning')}</small>
                   </Col>
                   <Col md={3}>
                     <div className="h3 text-info mb-1">🔗</div>
-                    <div className="h5 mb-0">Connected</div>
-                    <small className="text-muted">Real-time Ready</small>
+                    <div className="h5 mb-0">{t('mqtt.connection.connected')}</div>
+                    <small className="text-muted">{t('common.success')}</small>
                   </Col>
                   <Col md={3}>
                     <div className="h3 text-warning mb-1">🚀</div>
-                    <div className="h5 mb-0">Ready</div>
-                    <small className="text-muted">Start Controlling</small>
+                    <div className="h5 mb-0">{t('common.success')}</div>
+                    <small className="text-muted">{t('dashboard.devices.connectDevice')}</small>
                   </Col>
                 </Row>
               </Card.Body>

@@ -3,6 +3,7 @@ import { Modal, Button, Form, Alert, ListGroup, Spinner, InputGroup, Row, Col } 
 import { mqttTopicsRepository, MqttTopic } from '../repositories/mqttTopicsRepository';
 import { devicesRepository, Device } from '../repositories/devicesRepository';
 import { DeviceCreateModal } from './DeviceCreateModal';
+import { useTranslation } from 'react-i18next';
 
 interface MqttTopicsModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface MqttTopicsModalProps {
 }
 
 export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const [topics, setTopics] = useState<MqttTopic[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(false);
@@ -120,7 +122,7 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
     <>
       <Modal show={isOpen} onHide={onClose} size="lg">
         <Modal.Header closeButton>
-          <Modal.Title>📡 MQTT Topics</Modal.Title>
+          <Modal.Title>📡 {t('mqtt.modal.title')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {error && (
@@ -131,7 +133,7 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
 
           {/* Device Selection */}
           <div className="mb-4">
-            <Form.Label className="fw-bold">Device Selection</Form.Label>
+            <Form.Label className="fw-bold">{t('mqtt.modal.deviceSelection')}</Form.Label>
             <Row className="mb-3">
               <Col md={8}>
                 <Form.Select
@@ -140,12 +142,12 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
                   disabled={loadingDevices || devices.length === 0}
                 >
                   {loadingDevices ? (
-                    <option>Loading devices...</option>
+                    <option>{t('common.loading')}</option>
                   ) : devices.length === 0 ? (
-                    <option>No devices available</option>
+                    <option>{t('devices.noDevices')}</option>
                   ) : (
                     <>
-                      <option value="">Select a device to view/create topics</option>
+                      <option value="">{t('mqtt.modal.selectDevice')}</option>
                       {devices.map((device) => (
                         <option key={device.deviceId} value={device.deviceId}>
                           {device.name} ({device.deviceId})
@@ -161,26 +163,26 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
                   size="sm"
                   onClick={() => setShowDeviceModal(true)}
                 >
-                  + New Device
+                  + {t('mqtt.modal.newDevice')}
                 </Button>
               </Col>
             </Row>
             <Form.Text className="text-muted">
-              Choose which Arduino device to manage topics for
+              {t('mqtt.modal.helpText')}
             </Form.Text>
           </div>
 
           {/* Create new topic form - Only show if device is selected */}
           {selectedDeviceId && (
             <Form onSubmit={handleCreateTopic} className="mb-4">
-              <Form.Label className="fw-bold">Create New Topic for Selected Device</Form.Label>
+              <Form.Label className="fw-bold">{t('mqtt.topics.addTopic')}</Form.Label>
               
               <InputGroup>
                 <Form.Control
                   type="text"
                   value={newTopicName}
                   onChange={(e) => setNewTopicName(e.target.value)}
-                  placeholder="Enter topic name..."
+                  placeholder={t('mqtt.topics.topicName')}
                   disabled={creating}
                 />
                 <Button
@@ -191,10 +193,10 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
                   {creating ? (
                     <>
                       <Spinner size="sm" className="me-2" />
-                      Creating...
+                      {t('common.loading')}
                     </>
                   ) : (
-                    'Create Topic'
+                    t('mqtt.topics.addTopic')
                   )}
                 </Button>
               </InputGroup>
@@ -207,7 +209,7 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
           {/* Message when no device selected */}
           {!selectedDeviceId && (
             <Alert variant="info" className="mb-4">
-              <strong>Select a device above</strong> to view its topics and create new ones.
+              <strong>{t('mqtt.modal.selectDevice')}</strong>
             </Alert>
           )}
 
@@ -222,11 +224,11 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
                   <Spinner animation="border" role="status">
                     <span className="visually-hidden">Loading topics...</span>
                   </Spinner>
-                  <div className="mt-2">Loading topics...</div>
+                  <div className="mt-2">{t('common.loading')}</div>
                 </div>
               ) : topics.length === 0 ? (
                 <Alert variant="info" className="text-center">
-                  No topics found for this device. Create your first topic above!
+                  {t('mqtt.topics.noTopics')}
                 </Alert>
               ) : (
                 <ListGroup>
@@ -261,7 +263,7 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={onClose}>
-            Close
+            {t('mqtt.modal.close')}
           </Button>
         </Modal.Footer>
       </Modal>
@@ -269,19 +271,19 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
       {/* Delete confirmation modal */}
       <Modal show={!!deleteConfirmation} onHide={cancelDelete} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Confirm Delete</Modal.Title>
+          <Modal.Title>{t('common.delete')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>
-            Are you sure you want to delete this topic?
+            {t('common.warning')}
           </p>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={cancelDelete}>
-            No
+            {t('common.no')}
           </Button>
           <Button variant="danger" onClick={() => handleDeleteTopic(deleteConfirmation!)}>
-            Yes, Delete
+            {t('common.yes')}, {t('common.delete')}
           </Button>
         </Modal.Footer>
       </Modal>

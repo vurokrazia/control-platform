@@ -1,0 +1,161 @@
+{
+  "app": {
+    "title": "Control por Gestos",
+    "subtitle": "Panel de Control"
+  },
+  "auth": {
+    "login": {
+      "title": "Inicia sesión en tu cuenta",
+      "email": "Dirección de Correo",
+      "password": "Contraseña",
+      "button": "Iniciar Sesión",
+      "loading": "Iniciando sesión...",
+      "noAccount": "¿No tienes una cuenta?",
+      "signUpHere": "Regístrate aquí",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "emailPlaceholder": "Introduce tu correo",
+      "passwordPlaceholder": "Introduce tu contraseña",
+      "showPassword": "Mostrar contraseña",
+      "hidePassword": "Ocultar contraseña"
+    },
+    "register": {
+      "title": "Crea tu cuenta",
+      "fullName": "Nombre Completo",
+      "email": "Dirección de Correo",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar Contraseña",
+      "button": "Crear Cuenta",
+      "loading": "Creando Cuenta...",
+      "hasAccount": "¿Ya tienes una cuenta?",
+      "signInHere": "Inicia sesión aquí",
+      "namePlaceholder": "Introduce tu nombre completo",
+      "emailPlaceholder": "Introduce tu correo",
+      "passwordPlaceholder": "Crea una contraseña segura",
+      "confirmPasswordPlaceholder": "Confirma tu contraseña",
+      "passwordStrength": "Fortaleza de la Contraseña:",
+      "passwordStrengthVeryWeak": "Muy Débil",
+      "passwordStrengthWeak": "Débil",
+      "passwordStrengthGood": "Buena",
+      "passwordStrengthStrong": "Fuerte"
+    },
+    "validation": {
+      "nameRequired": "El nombre completo es requerido",
+      "nameMinLength": "El nombre debe tener al menos 2 caracteres",
+      "emailRequired": "El correo es requerido",
+      "emailInvalid": "Por favor introduce una dirección de correo válida",
+      "passwordRequired": "La contraseña es requerida",
+      "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
+      "confirmPasswordRequired": "Por favor confirma tu contraseña",
+      "passwordMismatch": "Las contraseñas no coinciden"
+    },
+    "errors": {
+      "networkError": "Error de red durante el inicio de sesión",
+      "registrationNetworkError": "Error de red durante el registro",
+      "loginFailed": "Error al iniciar sesión",
+      "registrationFailed": "Error en el registro"
+    }
+  },
+  "navigation": {
+    "dashboard": "Panel de Control",
+    "devices": "Dispositivos",
+    "settings": "Configuración",
+    "logout": "Cerrar Sesión",
+    "language": "Idioma"
+  },
+  "dashboard": {
+    "title": "Panel de Control",
+    "welcome": "Bienvenido al Panel de Control por Gestos",
+    "devices": {
+      "title": "Dispositivos Conectados",
+      "noDevices": "No hay dispositivos conectados",
+      "connectDevice": "Conectar Dispositivo"
+    },
+    "mqtt": {
+      "title": "Conexión MQTT",
+      "status": "Estado",
+      "connected": "Conectado",
+      "disconnected": "Desconectado",
+      "broker": "Broker",
+      "topics": "Temas"
+    }
+  },
+  "mqtt": {
+    "connection": {
+      "title": "Conexión MQTT",
+      "broker": "Broker MQTT",
+      "port": "Puerto",
+      "username": "Usuario",
+      "password": "Contraseña",
+      "clientId": "ID de Cliente",
+      "connect": "Conectar",
+      "disconnect": "Desconectar",
+      "connecting": "Conectando...",
+      "connected": "Conectado",
+      "disconnected": "Desconectado",
+      "error": "Error de Conexión"
+    },
+    "topics": {
+      "title": "Temas MQTT",
+      "addTopic": "Añadir Tema",
+      "topicName": "Nombre del Tema",
+      "qos": "QoS",
+      "subscribe": "Suscribirse",
+      "unsubscribe": "Desuscribirse",
+      "publish": "Publicar",
+      "message": "Mensaje",
+      "noTopics": "No hay temas configurados",
+      "messages": "Mensajes"
+    },
+    "modal": {
+      "title": "Configurar Temas MQTT",
+      "deviceSelection": "Selección de Dispositivo",
+      "selectDevice": "Seleccionar Dispositivo",
+      "newDevice": "Nuevo Dispositivo",
+      "deviceId": "ID del Dispositivo",
+      "deviceName": "Nombre del Dispositivo",
+      "close": "Cerrar",
+      "save": "Guardar Cambios",
+      "cancel": "Cancelar",
+      "addNew": "Añadir Nuevo",
+      "helpText": "Configura los temas MQTT para tus dispositivos para habilitar la comunicación de control por gestos."
+    }
+  },
+  "devices": {
+    "title": "Gestión de Dispositivos",
+    "addDevice": "Añadir Dispositivo",
+    "deviceList": "Lista de Dispositivos",
+    "noDevices": "No se encontraron dispositivos",
+    "deviceId": "ID del Dispositivo",
+    "deviceName": "Nombre del Dispositivo",
+    "deviceType": "Tipo de Dispositivo",
+    "status": "Estado",
+    "actions": "Acciones",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "connect": "Conectar",
+    "disconnect": "Desconectar"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "add": "Añadir",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "warning": "Advertencia",
+    "info": "Información",
+    "yes": "Sí",
+    "no": "No",
+    "ok": "OK",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "refresh": "Actualizar"
+  }
+}
