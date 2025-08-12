@@ -4,16 +4,26 @@ import dotenv from 'dotenv';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { DatabaseConnection } from './infrastructure/database/connection';
+import { RedisClient } from './infrastructure/cache/redis-client';
 import apiRoutes from './api';
 import swaggerOptions from './config/swagger-config';
+import { mqttServiceInstance } from './shared/MqttServiceInstance';
+import { MqttTopicRepository } from './infrastructure/database/repositories/MqttTopicRepository';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Initialize MQTT topic repository
+const mqttTopicRepository = new MqttTopicRepository();
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  origin: [
+    'http://localhost:5173', 
+    'http://localhost:3000',
+    /^https:\/\/.*\.trycloudflare\.com$/
+  ],
   credentials: true
 }));
 
@@ -100,16 +110,44 @@ app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
 
 async function startServer() {
   try {
+    // Connect to MongoDB
     const dbConnection = DatabaseConnection.getInstance();
     await dbConnection.connect();
+    console.log('✅ MongoDB connected successfully');
+    
+    // Connect to Redis (optional for demo)
+    try {
+      const redisClient = RedisClient.getInstance();
+      await redisClient.connect();
+      console.log('✅ Redis connected successfully');
+    } catch (error) {
+      console.log('⚠️  Redis connection failed - authentication will use fallback mode');
+      console.log('💡 For full session management, set up Redis using:');
+      console.log('   - Upstash: https://upstash.com/');
+      console.log('   - Docker: docker run -d -p 6379:6379 redis:alpine');
+    }
+    
+    // Load and subscribe to MQTT topics from database
+    const topics = await mqttTopicRepository.findAll();
+    const topicNames = topics.map(topic => topic.name);
+    
+    if (topicNames.length > 0) {
+      mqttServiceInstance.subscribeToTopics(topicNames);
+      console.log(`📨 MQTT subscriptions loaded from database: ${topicNames.join(', ')}`);
+    } else {
+      console.log('📭 No MQTT topics found in database');
+    }
     
     app.listen(PORT, () => {
-      console.log(`🚀 Servidor Arduino API ejecutándose en puerto ${PORT}`);
-      console.log(`📡 Endpoints disponibles en http://localhost:${PORT}`);
-      console.log(`🔧 Puerto Arduino configurado: ${process.env.ARDUINO_PORT || 'No configurado'}`);
+      console.log(`🚀 Arduino MQTT Control Platform API running on port ${PORT}`);
+      console.log(`📡 API endpoints available at http://localhost:${PORT}`);
+      console.log(`📚 Documentation available at http://localhost:${PORT}/docs/v1`);
+      console.log(`🔐 Authentication system enabled`);
+      console.log(`🗄️  Session management with Redis enabled`);
+      console.log(`🔧 Arduino port configured: ${process.env.ARDUINO_PORT || 'Not configured'}`);
     });
   } catch (error) {
-    console.error('❌ Error iniciando servidor:', error);
+    console.error('❌ Error starting server:', error);
     process.exit(1);
   }
 }
@@ -117,23 +155,55 @@ async function startServer() {
 startServer();
 
 process.on('SIGTERM', async () => {
-  console.log('🛑 Cerrando servidor...');
+  console.log('🛑 Shutting down server...');
   try {
+    // Disconnect MQTT
+    mqttServiceInstance.disconnect();
+    
+    // Disconnect Redis (if connected)
+    try {
+      const redisClient = RedisClient.getInstance();
+      if (redisClient.isClientConnected()) {
+        await redisClient.disconnect();
+        console.log('✅ Redis disconnected');
+      }
+    } catch (error) {
+      // Redis was not connected, ignore
+    }
+    
+    // Disconnect MongoDB
     const dbConnection = DatabaseConnection.getInstance();
     await dbConnection.disconnect();
+    console.log('✅ MongoDB disconnected');
   } catch (error) {
-    console.error('Error cerrando conexión a BD:', error);
+    console.error('Error closing connections:', error);
   }
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-  console.log('🛑 Cerrando servidor...');
+  console.log('🛑 Shutting down server...');
   try {
+    // Disconnect MQTT
+    mqttServiceInstance.disconnect();
+    
+    // Disconnect Redis (if connected)
+    try {
+      const redisClient = RedisClient.getInstance();
+      if (redisClient.isClientConnected()) {
+        await redisClient.disconnect();
+        console.log('✅ Redis disconnected');
+      }
+    } catch (error) {
+      // Redis was not connected, ignore
+    }
+    
+    // Disconnect MongoDB
     const dbConnection = DatabaseConnection.getInstance();
     await dbConnection.disconnect();
+    console.log('✅ MongoDB disconnected');
   } catch (error) {
-    console.error('Error cerrando conexión a BD:', error);
+    console.error('Error closing connections:', error);
   }
   process.exit(0);
 });

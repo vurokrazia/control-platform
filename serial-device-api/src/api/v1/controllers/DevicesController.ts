@@ -1,13 +1,16 @@
 import { Request, Response } from 'express';
 import { DeviceRepository } from '../../../infrastructure/database/repositories/DeviceRepository';
+import { MqttTopicRepository } from '../../../infrastructure/database/repositories/MqttTopicRepository';
 import { ConnectionManager } from '../../../infrastructure/managers/ConnectionManager';
 
 export class DevicesController {
   private deviceRepository: DeviceRepository;
+  private mqttTopicRepository: MqttTopicRepository;
   private connectionManager: ConnectionManager;
 
   constructor() {
     this.deviceRepository = new DeviceRepository();
+    this.mqttTopicRepository = new MqttTopicRepository();
     this.connectionManager = ConnectionManager.getInstance();
   }
 
@@ -19,6 +22,60 @@ export class DevicesController {
         success: true,
         data: devices,
         count: devices.length
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      res.status(500).json({ success: false, error: errorMessage });
+    }
+  }
+
+  // POST /devices - Create new device
+  async create(req: Request, res: Response): Promise<void> {
+    try {
+      const { name, type = 'arduino', port, baudRate = 9600 } = req.body;
+      
+      if (!name) {
+        res.status(400).json({ 
+          success: false, 
+          error: 'Device name is required' 
+        });
+        return;
+      }
+
+      // Generate unique device ID
+      const deviceId = `device-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      const deviceData: any = {
+        deviceId,
+        name,
+        type,
+        status: {
+          isConnected: false,
+          bufferSize: 0
+        },
+        statusHistory: {
+          totalConnections: 0,
+          totalDisconnections: 0,
+          totalUptime: 0,
+          lastStatusChange: new Date(),
+          averageConnectionDuration: 0
+        }
+      };
+
+      // Only add serialPort if port is provided
+      if (port) {
+        deviceData.serialPort = {
+          path: port,
+          baudRate: parseInt(baudRate.toString())
+        };
+      }
+
+      const device = await this.deviceRepository.create(deviceData);
+
+      res.status(201).json({
+        success: true,
+        message: 'Device created successfully',
+        data: device
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
@@ -50,6 +107,40 @@ export class DevicesController {
           ...device,
           connectionInfo,
           isConnected
+        }
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      res.status(500).json({ success: false, error: errorMessage });
+    }
+  }
+
+  // GET /devices/:id/topics - Get MQTT topics for device
+  async getTopics(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      
+      // Check if device exists
+      const device = await this.deviceRepository.findByDeviceId(id);
+      if (!device) {
+        res.status(404).json({ 
+          success: false, 
+          error: `Device ${id} not found` 
+        });
+        return;
+      }
+
+      // Get topics for this device
+      const allTopics = await this.mqttTopicRepository.findAll();
+      const deviceTopics = allTopics.filter(topic => topic.deviceId === id);
+
+      res.json({
+        success: true,
+        data: deviceTopics,
+        count: deviceTopics.length,
+        device: {
+          deviceId: device.deviceId,
+          name: device.name
         }
       });
     } catch (error) {

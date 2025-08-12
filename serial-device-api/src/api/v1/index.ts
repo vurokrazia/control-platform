@@ -4,8 +4,14 @@ import deviceDataRoutes from './routes/deviceData';
 import commandsRoutes from './routes/commands';
 import sessionsRoutes from './routes/sessions';
 import serialPortsRoutes from './routes/serialPorts';
+import mqttTopicsRoutes from './routes/mqttTopics';
+import topicMessagesRoutes from './routes/topicMessages';
+import authRoutes from './routes/auth';
 
 const router = express.Router();
+
+// Authentication routes (public access)
+router.use('/auth', authRoutes);
 
 // Mount RESTful resource routes
 router.use('/devices', devicesRoutes);
@@ -13,6 +19,8 @@ router.use('/devices/:deviceId/data', deviceDataRoutes);
 router.use('/devices/:deviceId/commands', commandsRoutes);
 router.use('/devices/:deviceId/sessions', sessionsRoutes);
 router.use('/serial-ports', serialPortsRoutes);
+router.use('/mqtt-topics', mqttTopicsRoutes);
+router.use('/topics/:topicId/topicMessages', topicMessagesRoutes);
 
 // V1 API info endpoint
 router.get('/', (_req, res) => {
@@ -21,6 +29,14 @@ router.get('/', (_req, res) => {
     namespace: 'v1',
     description: 'Control Platform Serial Device API v1',
     endpoints: {
+      // Authentication
+      'POST /api/v1/auth/register': 'Register new user',
+      'POST /api/v1/auth/login': 'User login',
+      'POST /api/v1/auth/logout': 'User logout',
+      'GET /api/v1/auth/me': 'Get user profile',
+      'POST /api/v1/auth/sessions/revoke': 'Revoke all user sessions',
+      'POST /api/v1/auth/password/change': 'Change user password',
+      
       // Device Management
       'GET /api/v1/devices': 'List all devices',
       'GET /api/v1/devices/{id}': 'Get device details',
@@ -52,11 +68,14 @@ router.get('/', (_req, res) => {
       'GET /api/v1/serial-ports': 'List available serial ports'
     },
     features: [
+      'JWT-based authentication',
+      'Redis session management',
       'RESTful API design',
       'Multi-device support',
       'Resource-based endpoints',
       'Real-time serial communication',
       'MongoDB persistence',
+      'MQTT integration',
       'Session tracking',
       'Command history',
       'Data analytics'
