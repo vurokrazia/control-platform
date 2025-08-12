@@ -1,7 +1,5 @@
 import axios from 'axios';
-
-// Configuración base de axios
-const API_BASE_URL = 'http://localhost:3001/api/v1';
+import { API_BASE_URL } from '../constants';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -70,7 +68,7 @@ class ArduinoRepository {
   // Listar puertos disponibles
   async getPorts(): Promise<Port[]> {
     try {
-      const response = await api.get<ApiResponse<Port[]>>('/serial-ports');
+      const response = await api.get<ApiResponse<Port[]>>('/v1/serial-ports');
       
       if (response.data.success && response.data.data) {
         return response.data.data;
@@ -93,7 +91,7 @@ class ArduinoRepository {
       // Generate a unique device ID based on port and timestamp
       const deviceId = `device-${port.replace(/[^a-zA-Z0-9]/g, '_')}-${Date.now()}`;
       
-      const response = await api.post<ApiResponse<{ deviceId: string; port: string; baudRate: number }>>(`/devices/${deviceId}/connect`, {
+      const response = await api.post<ApiResponse<{ deviceId: string; port: string; baudRate: number }>>(`/v1/devices/${deviceId}/connect`, {
         port,
         baudRate,
       });
@@ -119,7 +117,7 @@ class ArduinoRepository {
   // Desconectar del Arduino
   async disconnect(deviceId: string): Promise<string> {
     try {
-      const response = await api.post<ApiResponse>(`/devices/${deviceId}/disconnect`);
+      const response = await api.post<ApiResponse>(`/v1/devices/${deviceId}/disconnect`);
 
       if (response.data.success) {
         return response.data.message || 'Desconectado exitosamente';
@@ -139,7 +137,7 @@ class ArduinoRepository {
   // Obtener estado de conexión
   async getStatus(deviceId: string): Promise<ArduinoStatus> {
     try {
-      const response = await api.get<ApiResponse<{ status: ArduinoStatus }>>(`/devices/${deviceId}/status`);
+      const response = await api.get<ApiResponse<{ status: ArduinoStatus }>>(`/v1/devices/${deviceId}/status`);
 
       console.log('📊 Raw status response:', response.data);
 
@@ -162,7 +160,7 @@ class ArduinoRepository {
   // Enviar datos al Arduino
   async sendData(deviceId: string, data: string): Promise<string> {
     try {
-      const response = await api.post<ApiResponse>(`/devices/${deviceId}/data`, { data });
+      const response = await api.post<ApiResponse>(`/v1/devices/${deviceId}/data`, { data });
 
       if (response.data.success) {
         return response.data.message || 'Datos enviados correctamente';
@@ -182,7 +180,7 @@ class ArduinoRepository {
   // Leer último dato recibido
   async readData(deviceId: string): Promise<ArduinoData | null> {
     try {
-      const response = await api.get<ApiResponse<ArduinoData>>(`/devices/${deviceId}/data/latest`);
+      const response = await api.get<ApiResponse<ArduinoData>>(`/v1/devices/${deviceId}/data/latest`);
 
       if (response.data.success && response.data.data) {
         return response.data.data;
@@ -199,55 +197,11 @@ class ArduinoRepository {
     }
   }
 
-  // Obtener historial de datos
-  async getHistory(deviceId: string, limit: number = 10): Promise<ArduinoData[]> {
-    try {
-      const response = await api.get<ApiResponse<ArduinoData[]>>(
-        `/devices/${deviceId}/data?limit=${limit}`
-      );
-
-      if (response.data.success && response.data.data) {
-        return response.data.data;
-      }
-
-      throw new Error(response.data.error || 'Error obteniendo historial');
-    } catch (error) {
-      console.error('Error getting history:', error);
-      throw new Error(
-        axios.isAxiosError(error) && error.response?.data?.error
-          ? error.response.data.error
-          : 'Error de conexión al obtener historial'
-      );
-    }
-  }
-
-  // Enviar comando específico
-  async sendCommand(deviceId: string, command: string, value?: string | number): Promise<string> {
-    try {
-      const response = await api.post<ApiResponse>(`/devices/${deviceId}/commands`, {
-        command,
-        value,
-      });
-
-      if (response.data.success) {
-        return response.data.message || 'Comando enviado correctamente';
-      }
-
-      throw new Error(response.data.error || 'Error enviando comando');
-    } catch (error) {
-      console.error('Error sending command:', error);
-      throw new Error(
-        axios.isAxiosError(error) && error.response?.data?.error
-          ? error.response.data.error
-          : 'Error de conexión al enviar comando'
-      );
-    }
-  }
 
   // Verificar si el servidor está disponible
   async checkConnection(): Promise<boolean> {
     try {
-      const response = await api.get('/');
+      const response = await api.get('/v1/');
       return response.status === 200;
     } catch (error) {
       console.error('Server not available:', error);

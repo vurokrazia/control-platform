@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Nav, Navbar } from 'react-bootstrap';
+import { Container, Row, Col, Nav, Navbar, Button } from 'react-bootstrap';
 import HandTracker from './components/HandTracker';
 import ArduinoConnection from './components/ArduinoConnection';
 import ArduinoStatus from './components/ArduinoStatus';
 import ArduinoDashboard from './components/ArduinoDashboard';
+import MqttConnection from './components/MqttConnection';
+import MqttDashboard from './components/MqttDashboard';
+import { MqttTopicsModal } from './components/MqttTopicsModal';
 import { ArduinoProvider } from './context/ArduinoContext';
 import './App.css';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'hands' | 'arduino'>('arduino');
+  const [activeTab, setActiveTab] = useState<'hands' | 'arduino' | 'mqtt'>('arduino');
+  const [showMqttModal, setShowMqttModal] = useState(false);
 
   return (
     <div className="App">
@@ -26,7 +30,14 @@ const App: React.FC = () => {
                 onClick={() => setActiveTab('arduino')}
                 className="fw-bold"
               >
-                🔌 Arduino Control
+                🔌 Conexión Arduino
+              </Nav.Link>
+              <Nav.Link 
+                active={activeTab === 'mqtt'}
+                onClick={() => setActiveTab('mqtt')}
+                className="fw-bold"
+              >
+                📡 MQTT Control
               </Nav.Link>
               <Nav.Link 
                 active={activeTab === 'hands'}
@@ -35,6 +46,13 @@ const App: React.FC = () => {
               >
                 🖐️ Hand Tracking
               </Nav.Link>
+              <Button
+                variant="outline-primary"
+                onClick={() => setShowMqttModal(true)}
+                className="ms-2"
+              >
+                📡 MQTT Topics
+              </Button>
             </Nav>
           </Navbar.Collapse>
         </Container>
@@ -56,6 +74,17 @@ const App: React.FC = () => {
               </Col>
             </Row>
           </ArduinoProvider>
+        ) : activeTab === 'mqtt' ? (
+          <Row className="g-4">
+            {/* MQTT Connection */}
+            <Col lg={6}>
+              <MqttConnection />
+            </Col>
+            {/* MQTT Control Panel */}
+            <Col lg={6}>
+              <MqttDashboard />
+            </Col>
+          </Row>
         ) : (
           <Row className="justify-content-center">
             <Col xl={10} xxl={8}>
@@ -64,6 +93,12 @@ const App: React.FC = () => {
           </Row>
         )}
       </Container>
+
+      {/* MQTT Topics Modal */}
+      <MqttTopicsModal 
+        isOpen={showMqttModal}
+        onClose={() => setShowMqttModal(false)}
+      />
     </div>
   );
 };

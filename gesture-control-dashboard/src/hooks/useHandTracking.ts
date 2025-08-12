@@ -64,7 +64,7 @@ export const useHandTracking = () => {
         };
 
         // Detectar movimiento
-        const movement = movementDetectorRef.current.detectMovement(position, landmarks);
+        const movement = movementDetectorRef.current.detectMovement(position);
         const dominantDirection = movementDetectorRef.current.getDominantDirection();
 
         // Dibujar punto del dedo índice

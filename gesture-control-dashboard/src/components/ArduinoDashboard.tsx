@@ -20,7 +20,7 @@ const ArduinoDashboard: React.FC = () => {
       setSendHistory(prev => [...prev.slice(-9), message]); // Mantener últimos 10
       setMessage('');
     } catch (error) {
-      // Error ya manejado en el hook
+      // Error handled in hook
     }
   };
 
@@ -29,7 +29,7 @@ const ArduinoDashboard: React.FC = () => {
       await sendData(command);
       setSendHistory(prev => [...prev.slice(-9), command]);
     } catch (error) {
-      // Error ya manejado en el hook
+      // Error handled in hook
     }
   };
 
