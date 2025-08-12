@@ -8,11 +8,6 @@ export class DeviceRepository implements IDeviceRepository {
     return devices.map(this.toEntity);
   }
 
-  async findById(id: string): Promise<Device | null> {
-    const device = await DeviceModel.findById(id);
-    return device ? this.toEntity(device) : null;
-  }
-
   async findByDeviceId(deviceId: string): Promise<Device | null> {
     const device = await DeviceModel.findOne({ deviceId });
     return device ? this.toEntity(device) : null;

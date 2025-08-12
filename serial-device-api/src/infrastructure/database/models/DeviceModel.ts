@@ -30,7 +30,7 @@ const DeviceSchema = new Schema({
   deviceId: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   type: { type: String, required: true },
-  serialPort: { type: SerialPortInfoSchema, required: true },
+  serialPort: { type: SerialPortInfoSchema, required: false },
   status: { type: DeviceStatusSchema, required: true },
   statusHistory: { type: DeviceStatusHistorySchema, required: true }
 }, {

@@ -26,7 +26,7 @@ export interface Device {
   deviceId: string;
   name: string;
   type: string;
-  serialPort: SerialPortInfo;
+  serialPort?: SerialPortInfo;
   status: DeviceStatus;
   statusHistory: DeviceStatusHistory;
   createdAt: Date;
