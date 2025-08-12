@@ -4,26 +4,29 @@
     "description": "Universal platform for gesture-based hardware control with real-time communication",
     "private": true,
     "scripts": {
-      "dev": "concurrently \"npm run dev:api\" \"npm run dev:dashboard\"",
-      "dev:dashboard": "cd gesture-control-dashboard && npm run dev",
-      "dev:api": "cd serial-device-api && npm run dev:watch",
-      "start": "npm run dev",
-      "build": "npm run build:api && npm run build:dashboard",
-      "build:api": "cd serial-device-api && npm run build",
-      "build:dashboard": "cd gesture-control-dashboard && npm run build",
-      "preview": "cd gesture-control-dashboard && npm run preview",
-      "setup": "cd gesture-control-dashboard && npm install && cd ../serial-device-api && npm install",
-      "clean": "rm -rf gesture-control-dashboard/node_modules serial-device-api/node_modules",
-      "clean:build": "rm -rf gesture-control-dashboard/dist serial-device-api/dist",
-      "install:dashboard": "cd gesture-control-dashboard && npm install",
-      "install:api": "cd serial-device-api && npm install",
-      "typecheck": "cd serial-device-api && npm run typecheck"
+        "dev": "concurrently \"npm run dev:api\" \"npm run dev:dashboard\"",
+        "dev:dashboard": "cd gesture-control-dashboard && npm run dev",
+        "dev:api": "cd serial-device-api && npm run dev:watch",
+        "start": "npm run dev",
+        "build": "npm run build:api && npm run build:dashboard",
+        "build:api": "cd serial-device-api && npm run build",
+        "build:dashboard": "cd gesture-control-dashboard && npm run build",
+        "preview": "cd gesture-control-dashboard && npm run preview",
+        "setup": "cd gesture-control-dashboard && npm install && cd ../serial-device-api && npm install",
+        "clean": "rm -rf gesture-control-dashboard/node_modules serial-device-api/node_modules",
+        "clean:build": "rm -rf gesture-control-dashboard/dist serial-device-api/dist",
+        "install:dashboard": "cd gesture-control-dashboard && npm install",
+        "install:api": "cd serial-device-api && npm install",
+        "typecheck": "cd serial-device-api && npm run typecheck"
     },
     "devDependencies": {
-      "concurrently": "^8.2.0"
+        "concurrently": "^8.2.0"
     },
     "engines": {
-      "node": ">=18.0.0",
-      "npm": ">=9.0.0"
+        "node": ">=18.0.0",
+        "npm": ">=9.0.0"
+    },
+    "dependencies": {
+        "cloudflared": "^0.7.1"
     }
-  }
+}
