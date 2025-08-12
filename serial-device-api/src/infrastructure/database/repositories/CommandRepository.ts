@@ -3,11 +3,6 @@ import { Command } from '../../../domain/entities/Command';
 import { CommandModel } from '../models/CommandModel';
 
 export class CommandRepository implements ICommandRepository {
-  async findAll(): Promise<Command[]> {
-    const commands = await CommandModel.find().sort({ sentAt: -1 });
-    return commands.map(this.toEntity);
-  }
-
   async findById(id: string): Promise<Command | null> {
     const command = await CommandModel.findById(id);
     return command ? this.toEntity(command) : null;

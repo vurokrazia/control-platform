@@ -3,11 +3,6 @@ import { DeviceData } from '../../../domain/entities/DeviceData';
 import { DeviceDataModel } from '../models/DeviceDataModel';
 
 export class DeviceDataRepository implements IDeviceDataRepository {
-  async findAll(): Promise<DeviceData[]> {
-    const data = await DeviceDataModel.find().sort({ timestamp: -1 });
-    return data.map(this.toEntity);
-  }
-
   async findById(id: string): Promise<DeviceData | null> {
     const data = await DeviceDataModel.findById(id);
     return data ? this.toEntity(data) : null;
@@ -18,13 +13,6 @@ export class DeviceDataRepository implements IDeviceDataRepository {
       .find({ deviceId })
       .sort({ timestamp: -1 })
       .limit(limit);
-    return data.map(this.toEntity);
-  }
-
-  async findBySessionId(sessionId: string): Promise<DeviceData[]> {
-    const data = await DeviceDataModel
-      .find({ sessionId })
-      .sort({ timestamp: -1 });
     return data.map(this.toEntity);
   }
 

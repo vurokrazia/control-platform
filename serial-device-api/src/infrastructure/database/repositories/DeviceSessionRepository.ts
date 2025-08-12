@@ -3,11 +3,6 @@ import { DeviceSession } from '../../../domain/entities/DeviceSession';
 import { DeviceSessionModel } from '../models/DeviceSessionModel';
 
 export class DeviceSessionRepository implements IDeviceSessionRepository {
-  async findAll(): Promise<DeviceSession[]> {
-    const sessions = await DeviceSessionModel.find().sort({ createdAt: -1 });
-    return sessions.map(this.toEntity);
-  }
-
   async findById(id: string): Promise<DeviceSession | null> {
     const session = await DeviceSessionModel.findById(id);
     return session ? this.toEntity(session) : null;
