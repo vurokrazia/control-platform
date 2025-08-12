@@ -43,6 +43,59 @@ router.get('/', devicesController.index.bind(devicesController));
 
 /**
  * @swagger
+ * /devices:
+ *   post:
+ *     tags: [Devices]
+ *     summary: Create new device
+ *     description: Register a new device in the system
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Living Room Arduino"
+ *                 description: Human-readable name for the device
+ *               type:
+ *                 type: string
+ *                 example: "arduino"
+ *                 description: "Type of device (default: arduino)"
+ *               port:
+ *                 type: string
+ *                 example: "/dev/cu.usbmodem14101"
+ *                 description: Serial port path (optional)
+ *               baudRate:
+ *                 type: integer
+ *                 example: 9600
+ *                 description: "Serial communication baud rate (default: 9600)"
+ *             required:
+ *               - name
+ *     responses:
+ *       201:
+ *         description: Device created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/Device'
+ *       400:
+ *         description: Invalid request or device already exists
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/', devicesController.create.bind(devicesController));
+
+/**
+ * @swagger
  * /devices/{id}:
  *   get:
  *     tags: [Devices]
@@ -61,6 +114,48 @@ router.get('/', devicesController.index.bind(devicesController));
  *         description: Device not found
  */
 router.get('/:id', devicesController.show.bind(devicesController));
+
+/**
+ * @swagger
+ * /devices/{id}/topics:
+ *   get:
+ *     tags: [Devices]
+ *     summary: Get MQTT topics for device
+ *     description: Get all MQTT topics associated with a specific device
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Device ID
+ *     responses:
+ *       200:
+ *         description: List of MQTT topics for the device
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/MqttTopic'
+ *                 count:
+ *                   type: integer
+ *                 device:
+ *                   type: object
+ *                   properties:
+ *                     deviceId:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *       404:
+ *         description: Device not found
+ */
+router.get('/:id/topics', devicesController.getTopics.bind(devicesController));
 
 /**
  * @swagger
