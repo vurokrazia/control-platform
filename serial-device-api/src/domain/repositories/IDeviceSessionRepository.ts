@@ -1,7 +1,6 @@
 import { DeviceSession } from '../entities/DeviceSession';
 
 export interface IDeviceSessionRepository {
-  findAll(): Promise<DeviceSession[]>;
   findById(id: string): Promise<DeviceSession | null>;
   findByDeviceId(deviceId: string): Promise<DeviceSession[]>;
   findActiveSession(deviceId: string): Promise<DeviceSession | null>;

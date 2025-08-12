@@ -1,7 +1,6 @@
 import { Command } from '../entities/Command';
 
 export interface ICommandRepository {
-  findAll(): Promise<Command[]>;
   findById(id: string): Promise<Command | null>;
   findByDeviceId(deviceId: string): Promise<Command[]>;
   create(command: Omit<Command, '_id'>): Promise<Command>;
