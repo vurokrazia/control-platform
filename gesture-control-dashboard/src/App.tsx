@@ -1,105 +1,79 @@
-import React, { useState } from 'react';
-import { Container, Row, Col, Nav, Navbar, Button } from 'react-bootstrap';
-import HandTracker from './components/HandTracker';
-import ArduinoConnection from './components/ArduinoConnection';
-import ArduinoStatus from './components/ArduinoStatus';
-import ArduinoDashboard from './components/ArduinoDashboard';
-import MqttConnection from './components/MqttConnection';
-import MqttDashboard from './components/MqttDashboard';
-import { MqttTopicsModal } from './components/MqttTopicsModal';
-import { ArduinoProvider } from './context/ArduinoContext';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuthStore } from './stores/authStore';
+
+// Authentication Components
+import { Login } from './components/Login';
+import { Register } from './components/Register';
+import { PrivateRoute } from './components/PrivateRoute';
+import { Dashboard } from './components/Dashboard';
+
+// Existing Components (now protected)
+import { ControlPage } from './components/ControlPage';
+
 import './App.css';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'hands' | 'arduino' | 'mqtt'>('arduino');
-  const [showMqttModal, setShowMqttModal] = useState(false);
+  const { initialize } = useAuthStore();
+
+  // Initialize auth state from localStorage on app start
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   return (
-    <div className="App">
-      {/* Navbar Bootstrap */}
-      <Navbar bg="white" expand="lg" className="shadow-sm mb-4">
-        <Container>
-          <Navbar.Brand className="fw-bold text-primary">
-            🤖 Arduino & Hand Control
-          </Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="ms-auto">
-              <Nav.Link 
-                active={activeTab === 'arduino'}
-                onClick={() => setActiveTab('arduino')}
-                className="fw-bold"
-              >
-                🔌 Conexión Arduino
-              </Nav.Link>
-              <Nav.Link 
-                active={activeTab === 'mqtt'}
-                onClick={() => setActiveTab('mqtt')}
-                className="fw-bold"
-              >
-                📡 MQTT Control
-              </Nav.Link>
-              <Nav.Link 
-                active={activeTab === 'hands'}
-                onClick={() => setActiveTab('hands')}
-                className="fw-bold"
-              >
-                🖐️ Hand Tracking
-              </Nav.Link>
-              <Button
-                variant="outline-primary"
-                onClick={() => setShowMqttModal(true)}
-                className="ms-2"
-              >
-                📡 MQTT Topics
-              </Button>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
-
-      {/* Contenido principal */}
-      <Container fluid className="px-3">
-        {activeTab === 'arduino' ? (
-          <ArduinoProvider>
-            <Row className="g-4">
-              {/* Conexión y Estado */}
-              <Col lg={6}>
-                <ArduinoConnection />
-                <ArduinoStatus />
-              </Col>
-              {/* Panel de Control */}
-              <Col lg={6}>
-                <ArduinoDashboard />
-              </Col>
-            </Row>
-          </ArduinoProvider>
-        ) : activeTab === 'mqtt' ? (
-          <Row className="g-4">
-            {/* MQTT Connection */}
-            <Col lg={6}>
-              <MqttConnection />
-            </Col>
-            {/* MQTT Control Panel */}
-            <Col lg={6}>
-              <MqttDashboard />
-            </Col>
-          </Row>
-        ) : (
-          <Row className="justify-content-center">
-            <Col xl={10} xxl={8}>
-              <HandTracker />
-            </Col>
-          </Row>
-        )}
-      </Container>
-
-      {/* MQTT Topics Modal */}
-      <MqttTopicsModal 
-        isOpen={showMqttModal}
-        onClose={() => setShowMqttModal(false)}
-      />
-    </div>
+    <Router>
+      <div className="App">
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          
+          {/* Protected Routes */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            } 
+          />
+          
+          <Route 
+            path="/control" 
+            element={
+              <PrivateRoute>
+                <ControlPage />
+              </PrivateRoute>
+            } 
+          />
+          
+          <Route 
+            path="/mqtt" 
+            element={
+              <PrivateRoute>
+                <ControlPage initialTab="mqtt" />
+              </PrivateRoute>
+            } 
+          />
+          
+          <Route 
+            path="/devices" 
+            element={
+              <PrivateRoute>
+                <ControlPage initialTab="arduino" />
+              </PrivateRoute>
+            } 
+          />
+          
+          {/* Redirect root to dashboard */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          
+          {/* Catch all - redirect to dashboard */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </div>
+    </Router>
   );
 };
 
