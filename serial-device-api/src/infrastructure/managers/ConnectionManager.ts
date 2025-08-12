@@ -1,8 +1,8 @@
-import { ArduinoController } from "../controllers/ArduinoController";
+import { ArduinoService } from "../../domain/services/ArduinoService";
 
 export interface ConnectionInfo {
   deviceId: string;
-  controller: ArduinoController;
+  controller: ArduinoService;
   port: string;
   baudRate: number;
   connectedAt: Date;
@@ -22,7 +22,7 @@ export class ConnectionManager {
     return ConnectionManager.instance;
   }
 
-  public getConnection(deviceId: string): ArduinoController | null {
+  public getConnection(deviceId: string): ArduinoService | null {
     const connectionInfo = this.connections.get(deviceId);
     if (connectionInfo) {
       connectionInfo.lastActivity = new Date();
@@ -31,11 +31,11 @@ export class ConnectionManager {
     return null;
   }
 
-  public async createConnection(deviceId: string, port: string, baudRate: number = 9600): Promise<ArduinoController> {
+  public async createConnection(deviceId: string, port: string, baudRate: number = 9600): Promise<ArduinoService> {
     // Close existing connection if any
     await this.removeConnection(deviceId);
 
-    const controller = new ArduinoController();
+    const controller = new ArduinoService();
     const connectionInfo: ConnectionInfo = {
       deviceId,
       controller,

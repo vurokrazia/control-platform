@@ -1,10 +1,10 @@
 import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline';
-import { DeviceService } from '../../domain/services/DeviceService';
-import { DeviceRepository } from '../database/repositories/DeviceRepository';
-import { DeviceSessionRepository } from '../database/repositories/DeviceSessionRepository';
-import { DeviceDataRepository } from '../database/repositories/DeviceDataRepository';
-import { CommandRepository } from '../database/repositories/CommandRepository';
+import { DeviceService } from './DeviceService';
+import { DeviceRepository } from '../../infrastructure/database/repositories/DeviceRepository';
+import { DeviceSessionRepository } from '../../infrastructure/database/repositories/DeviceSessionRepository';
+import { DeviceDataRepository } from '../../infrastructure/database/repositories/DeviceDataRepository';
+import { CommandRepository } from '../../infrastructure/database/repositories/CommandRepository';
 import type {
   DataEntry,
   ConnectionResult,
@@ -14,7 +14,7 @@ import type {
   ArduinoStatus,
 } from '../../types/arduino';
 
-export class ArduinoController {
+export class ArduinoService {
   private port: SerialPort | null = null;
   private parser: ReadlineParser | null = null;
   private isConnected: boolean = false;
