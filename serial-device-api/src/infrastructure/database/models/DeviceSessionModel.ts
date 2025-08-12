@@ -14,7 +14,7 @@ const SessionUsageSchema = new Schema({
   commandsSent: { type: Number, default: 0 },
   dataReceived: { type: Number, default: 0 },
   gesturesDetected: { type: Number, default: 0 },
-  errors: { type: Number, default: 0 }
+  errorCount: { type: Number, default: 0 }
 });
 
 const DeviceSessionSchema = new Schema({

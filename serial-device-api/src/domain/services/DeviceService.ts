@@ -34,7 +34,7 @@ export class DeviceService {
           commandsSent: 0,
           dataReceived: 0,
           gesturesDetected: 0,
-          errors: 0
+          errorCount: 0
         }
       });
     } else if (!session.isActive) {

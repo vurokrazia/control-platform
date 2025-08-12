@@ -158,7 +158,7 @@ export class SessionsController {
           recentSessions.reduce((sum, session) => sum + session.totalDuration, 0) / recentSessions.length : 0,
         totalCommands: recentSessions.reduce((sum, session) => sum + session.usage.commandsSent, 0),
         totalDataReceived: recentSessions.reduce((sum, session) => sum + session.usage.dataReceived, 0),
-        totalErrors: recentSessions.reduce((sum, session) => sum + session.usage.errors, 0),
+        totalErrors: recentSessions.reduce((sum, session) => sum + session.usage.errorCount, 0),
         longestSession: this.getLongestSession(recentSessions),
         mostActiveDay: this.getMostActiveDay(recentSessions),
         dateRange: {
@@ -208,7 +208,7 @@ export class SessionsController {
           duration: daySession?.totalDuration || 0,
           commands: daySession?.usage.commandsSent || 0,
           dataReceived: daySession?.usage.dataReceived || 0,
-          errors: daySession?.usage.errors || 0
+          errors: daySession?.usage.errorCount || 0
         });
       }
 

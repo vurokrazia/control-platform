@@ -9,7 +9,7 @@ export interface SessionUsage {
   commandsSent: number;
   dataReceived: number;
   gesturesDetected: number;
-  errors: number;
+  errorCount: number;
 }
 
 export interface DeviceSession {
