@@ -1,0 +1,53 @@
+{
+  "arduino/sensors": [
+    {
+      "timestamp": "2025-01-10T10:30:00Z",
+      "deviceId": "arduino_001",
+      "temperature": 23.5,
+      "humidity": 65.2,
+      "lightLevel": 750
+    },
+    {
+      "timestamp": "2025-01-10T10:31:00Z",
+      "deviceId": "arduino_002",
+      "temperature": 24.1,
+      "humidity": 62.8,
+      "lightLevel": 820
+    }
+  ],
+  "arduino/commands": [
+    {
+      "timestamp": "2025-01-10T10:32:00Z",
+      "command": "move_forward",
+      "duration": 2000,
+      "speed": 80
+    },
+    {
+      "timestamp": "2025-01-10T10:33:00Z",
+      "command": "turn_left",
+      "angle": 90,
+      "speed": 60
+    },
+    {
+      "timestamp": "2025-01-10T10:34:00Z",
+      "command": "stop",
+      "immediate": true
+    }
+  ],
+  "test/topic": [
+    {
+      "message": "Hello MQTT World!",
+      "timestamp": "2025-01-10T10:35:00Z",
+      "sender": "test_client"
+    },
+    {
+      "message": "Testing connection",
+      "timestamp": "2025-01-10T10:36:00Z",
+      "sender": "mqtt_publisher",
+      "data": {
+        "battery": 85,
+        "signal": "strong"
+      }
+    }
+  ]
+}

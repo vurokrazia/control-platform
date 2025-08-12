@@ -12,7 +12,7 @@ interface AuthState {
 
   // Actions
   login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, username: string, email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   getProfile: () => Promise<void>;
   clearError: () => void;
@@ -70,11 +70,11 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      register: async (name: string, username: string, email: string, password: string): Promise<boolean> => {
+      register: async (name: string, email: string, password: string): Promise<boolean> => {
         set({ isLoading: true, error: null });
         
         try {
-          const result = await authRepository.register({ name, username, email, password });
+          const result = await authRepository.register({ name, email, password });
           
           if (result.success && result.user && result.token) {
             const { user, token } = result;

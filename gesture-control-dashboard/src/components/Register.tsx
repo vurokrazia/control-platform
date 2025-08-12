@@ -5,7 +5,6 @@ import { useAuthStore } from '../stores/authStore';
 
 interface FormErrors {
   name?: string;
-  username?: string;
   email?: string;
   password?: string;
   confirmPassword?: string;
@@ -17,7 +16,6 @@ export const Register: React.FC = () => {
   
   const [formData, setFormData] = useState({
     name: '',
-    username: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -69,15 +67,6 @@ export const Register: React.FC = () => {
       errors.name = 'Name must be at least 2 characters';
     }
     
-    // Username validation
-    if (!formData.username.trim()) {
-      errors.username = 'Username is required';
-    } else if (formData.username.trim().length < 3) {
-      errors.username = 'Username must be at least 3 characters';
-    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username.trim())) {
-      errors.username = 'Username can only contain letters, numbers, and underscores';
-    }
-    
     // Email validation
     if (!formData.email.trim()) {
       errors.email = 'Email is required';
@@ -125,7 +114,7 @@ export const Register: React.FC = () => {
       return;
     }
     
-    const success = await register(formData.name.trim(), formData.username.trim(), formData.email, formData.password);
+    const success = await register(formData.name.trim(), formData.email, formData.password);
     
     if (success) {
       navigate('/dashboard', { replace: true });
@@ -166,25 +155,6 @@ export const Register: React.FC = () => {
                   <Form.Control.Feedback type="invalid">
                     {formErrors.name}
                   </Form.Control.Feedback>
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Username</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleInputChange}
-                    isInvalid={!!formErrors.username}
-                    placeholder="Choose a unique username"
-                    disabled={isLoading}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {formErrors.username}
-                  </Form.Control.Feedback>
-                  <Form.Text className="text-muted">
-                    3+ characters, letters, numbers, and underscores only
-                  </Form.Text>
                 </Form.Group>
 
                 <Form.Group className="mb-3">
