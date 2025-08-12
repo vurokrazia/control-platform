@@ -4,18 +4,24 @@ const swaggerOptions: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Control Platform Serial Device API',
+      title: 'Arduino MQTT Control Platform API',
       version: '1.0.0',
       description: `
-        RESTful API for managing Arduino serial connections and communication.
+        RESTful API for managing Arduino devices, MQTT topics, and real-time communication.
         
         ## Features
-        - Multi-device support
-        - Real-time serial communication
+        - Device management (create, connect, control)
+        - MQTT topic management per device
+        - Real-time message publishing and monitoring
         - MongoDB persistence
-        - Session tracking
-        - Command history
-        - Data buffering
+        - Device connection tracking
+        - Message history
+        
+        ## Core Functionality
+        - **Devices**: Create and manage Arduino devices
+        - **MQTT Topics**: Device-specific topic management
+        - **Messages**: Publish and retrieve topic messages
+        - **Connections**: Serial device communication
         
         ## Authentication
         Currently no authentication required.
@@ -45,20 +51,28 @@ const swaggerOptions: swaggerJsdoc.Options = {
     ],
     tags: [
       {
+        name: 'Devices',
+        description: 'Device creation and management'
+      },
+      {
         name: 'Arduino',
-        description: 'Arduino device management and communication'
+        description: 'Arduino device connection and communication'
       },
       {
-        name: 'Connection',
-        description: 'Device connection management'
+        name: 'MQTT',
+        description: 'MQTT topic management and messaging'
       },
       {
-        name: 'Data',
-        description: 'Serial data operations'
+        name: 'Topics',
+        description: 'Topic message history and monitoring'
       },
       {
         name: 'Status',
         description: 'Device status and monitoring'
+      },
+      {
+        name: 'Sessions',
+        description: 'Device session tracking and analytics'
       }
     ],
     components: {
@@ -243,6 +257,158 @@ const swaggerOptions: swaggerJsdoc.Options = {
             }
           }
         },
+        Device: {
+          type: 'object',
+          properties: {
+            deviceId: {
+              type: 'string',
+              example: 'device-1728912345678-ab3cd9ef2',
+              description: 'Auto-generated unique device identifier'
+            },
+            name: {
+              type: 'string',
+              example: 'Arduino Robot Car',
+              description: 'Device display name'
+            },
+            type: {
+              type: 'string',
+              example: 'arduino',
+              default: 'arduino',
+              description: 'Device type'
+            },
+            port: {
+              type: 'string',
+              nullable: true,
+              example: '/dev/cu.usbmodem14101',
+              description: 'Serial port path (optional)'
+            },
+            baudRate: {
+              type: 'integer',
+              example: 9600,
+              default: 9600,
+              description: 'Communication baud rate'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-20T10:00:00.000Z'
+            }
+          },
+          required: ['deviceId', 'name', 'type', 'baudRate', 'createdAt']
+        },
+        CreateDeviceRequest: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              example: 'Arduino Robot Car',
+              description: 'Device display name'
+            },
+            type: {
+              type: 'string',
+              example: 'arduino',
+              default: 'arduino',
+              description: 'Device type'
+            },
+            port: {
+              type: 'string',
+              nullable: true,
+              example: '/dev/cu.usbmodem14101',
+              description: 'Serial port path (optional)'
+            },
+            baudRate: {
+              type: 'integer',
+              example: 9600,
+              default: 9600,
+              description: 'Communication baud rate'
+            }
+          },
+          required: ['name']
+        },
+        MqttTopic: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+              description: 'UUID topic identifier'
+            },
+            name: {
+              type: 'string',
+              example: 'robots/sparky/commands',
+              description: 'MQTT topic name'
+            },
+            deviceId: {
+              type: 'string',
+              example: 'device-1728912345678-ab3cd9ef2',
+              description: 'Associated device identifier'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-20T10:00:00.000Z'
+            }
+          },
+          required: ['id', 'name', 'deviceId', 'createdAt']
+        },
+        CreateTopicRequest: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              example: 'robots/sparky/commands',
+              description: 'MQTT topic name'
+            },
+            deviceId: {
+              type: 'string',
+              example: 'device-1728912345678-ab3cd9ef2',
+              description: 'Associated device identifier'
+            }
+          },
+          required: ['name', 'deviceId']
+        },
+        PublishTopicRequest: {
+          type: 'object',
+          properties: {
+            topic: {
+              type: 'string',
+              example: 'robots/sparky/commands',
+              description: 'MQTT topic name to publish to'
+            },
+            payload: {
+              type: 'object',
+              example: { "command": "W", "speed": 200 },
+              description: 'Message payload to publish'
+            }
+          },
+          required: ['topic', 'payload']
+        },
+        TopicMessage: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+              description: 'UUID message identifier'
+            },
+            payload: {
+              type: 'object',
+              example: { "command": "W", "speed": 200 },
+              description: 'Message payload data'
+            },
+            topicOwner: {
+              type: 'string',
+              example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+              description: 'Topic ID that owns this message'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-20T10:30:00.000Z'
+            }
+          },
+          required: ['id', 'payload', 'topicOwner', 'createdAt']
+        },
         DeviceStatusResponse: {
           allOf: [
             { $ref: '#/components/schemas/ApiResponse' },
@@ -284,6 +450,200 @@ const swaggerOptions: swaggerJsdoc.Options = {
             }
           ]
         },
+        SessionUsage: {
+          type: 'object',
+          properties: {
+            commandsSent: {
+              type: 'integer',
+              example: 25,
+              description: 'Number of commands sent during session'
+            },
+            dataReceived: {
+              type: 'integer',
+              example: 150,
+              description: 'Amount of data received during session'
+            },
+            gesturesDetected: {
+              type: 'integer',
+              example: 12,
+              description: 'Number of gestures detected during session'
+            },
+            errorCount: {
+              type: 'integer',
+              example: 2,
+              description: 'Number of errors encountered during session'
+            }
+          },
+          required: ['commandsSent', 'dataReceived', 'gesturesDetected', 'errorCount']
+        },
+        SessionConnectionInfo: {
+          type: 'object',
+          properties: {
+            connectedAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-20T10:00:00.000Z',
+              description: 'When the connection was established'
+            },
+            disconnectedAt: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              example: '2024-01-20T11:30:00.000Z',
+              description: 'When the connection was terminated'
+            },
+            duration: {
+              type: 'integer',
+              nullable: true,
+              example: 5400,
+              description: 'Connection duration in seconds'
+            },
+            reason: {
+              type: 'string',
+              example: 'session_start',
+              description: 'Reason for connection/disconnection'
+            }
+          },
+          required: ['connectedAt', 'reason']
+        },
+        DeviceSession: {
+          type: 'object',
+          properties: {
+            _id: {
+              type: 'string',
+              example: '507f1f77bcf86cd799439011',
+              description: 'Session MongoDB ObjectId'
+            },
+            deviceId: {
+              type: 'string',
+              example: 'device-1728912345678-ab3cd9ef2',
+              description: 'Associated device identifier'
+            },
+            sessionDate: {
+              type: 'string',
+              format: 'date',
+              example: '2024-01-20',
+              description: 'Date of the session'
+            },
+            startTime: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-20T10:00:00.000Z',
+              description: 'Session start timestamp'
+            },
+            endTime: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              example: '2024-01-20T11:30:00.000Z',
+              description: 'Session end timestamp'
+            },
+            isActive: {
+              type: 'boolean',
+              example: true,
+              description: 'Whether the session is currently active'
+            },
+            totalDuration: {
+              type: 'integer',
+              example: 5400,
+              description: 'Total session duration in seconds'
+            },
+            connections: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/SessionConnectionInfo' },
+              description: 'List of connections during this session'
+            },
+            usage: {
+              $ref: '#/components/schemas/SessionUsage',
+              description: 'Session usage statistics'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-20T10:00:00.000Z'
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-20T11:30:00.000Z'
+            }
+          },
+          required: ['deviceId', 'sessionDate', 'startTime', 'isActive', 'totalDuration', 'connections', 'usage', 'createdAt', 'updatedAt']
+        },
+        SessionStats: {
+          type: 'object',
+          properties: {
+            deviceId: {
+              type: 'string',
+              example: 'device-1728912345678-ab3cd9ef2'
+            },
+            totalSessions: {
+              type: 'integer',
+              example: 15,
+              description: 'Total number of sessions'
+            },
+            activeDays: {
+              type: 'integer',
+              example: 12,
+              description: 'Number of days with activity'
+            },
+            totalUsageTime: {
+              type: 'integer',
+              example: 54000,
+              description: 'Total usage time in seconds'
+            },
+            averageSessionDuration: {
+              type: 'number',
+              example: 3600.5,
+              description: 'Average session duration in seconds'
+            },
+            totalCommands: {
+              type: 'integer',
+              example: 350,
+              description: 'Total commands sent across all sessions'
+            },
+            totalDataReceived: {
+              type: 'integer',
+              example: 2500,
+              description: 'Total data received across all sessions'
+            },
+            totalErrors: {
+              type: 'integer',
+              example: 8,
+              description: 'Total errors across all sessions'
+            },
+            longestSession: {
+              type: 'integer',
+              example: 7200,
+              description: 'Longest session duration in seconds'
+            },
+            mostActiveDay: {
+              type: 'string',
+              format: 'date',
+              example: '2024-01-20',
+              description: 'Date with most activity'
+            },
+            dateRange: {
+              type: 'object',
+              properties: {
+                from: {
+                  type: 'string',
+                  format: 'date-time',
+                  example: '2024-01-01T00:00:00.000Z'
+                },
+                to: {
+                  type: 'string',
+                  format: 'date-time',
+                  example: '2024-01-20T23:59:59.000Z'
+                },
+                days: {
+                  type: 'integer',
+                  example: 30
+                }
+              }
+            }
+          }
+        },
         Error: {
           type: 'object',
           properties: {
@@ -314,9 +674,19 @@ const swaggerOptions: swaggerJsdoc.Options = {
           required: true,
           schema: {
             type: 'string',
-            example: 'arduino1'
+            example: 'device-1728912345678-ab3cd9ef2'
           },
           description: 'Unique device identifier'
+        },
+        TopicId: {
+          name: 'topicId',
+          in: 'path',
+          required: true,
+          schema: {
+            type: 'string',
+            example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+          },
+          description: 'Unique topic identifier'
         },
         Limit: {
           name: 'limit',
