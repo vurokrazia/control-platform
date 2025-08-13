@@ -7,6 +7,7 @@ export interface User {
   name: string;
   isActive: boolean;
   emailVerified: boolean;
+  language: string;
   lastLoginAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -19,6 +20,7 @@ export class UserEntity implements User {
   public name: string;
   public isActive: boolean;
   public emailVerified: boolean;
+  public language: string;
   public lastLoginAt?: Date;
   public createdAt: Date;
   public updatedAt: Date;
@@ -30,6 +32,7 @@ export class UserEntity implements User {
     id?: string,
     isActive: boolean = true,
     emailVerified: boolean = false,
+    language: string = 'en',
     lastLoginAt?: Date,
     createdAt?: Date,
     updatedAt?: Date
@@ -40,6 +43,7 @@ export class UserEntity implements User {
     this.name = name.trim();
     this.isActive = isActive;
     this.emailVerified = emailVerified;
+    this.language = language;
     if (lastLoginAt !== undefined) {
       this.lastLoginAt = lastLoginAt;
     }
@@ -75,5 +79,12 @@ export class UserEntity implements User {
       this.email = email.toLowerCase().trim();
     }
     this.updatedAt = new Date();
+  }
+
+  public updateLanguage(language: string): void {
+    if (language === 'en' || language === 'es') {
+      this.language = language;
+      this.updatedAt = new Date();
+    }
   }
 }

@@ -431,6 +431,103 @@ export class AuthController {
     }
   };
 
+  /**
+   * @swagger
+   * /auth/language:
+   *   put:
+   *     tags: [Authentication]
+   *     summary: Update user language preference
+   *     description: Update the language preference for the authenticated user
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               language:
+   *                 type: string
+   *                 enum: [en, es]
+   *                 description: Language preference (en for English, es for Spanish)
+   *             required:
+   *               - language
+   *     responses:
+   *       200:
+   *         description: Language preference updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     message:
+   *                       type: string
+   *                       example: Language preference updated successfully
+   *       400:
+   *         description: Invalid language or validation error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Authentication required
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
+  public updateLanguage = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { language } = req.body;
+      const user = req.user;
+
+      if (!user) {
+        res.status(401).json({
+          success: false,
+          error: 'Unauthorized',
+          message: 'User not authenticated',
+          apiVersion: '1.0.0',
+          namespace: 'v1'
+        });
+        return;
+      }
+
+      if (!language) {
+        res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          message: 'Language is required',
+          apiVersion: '1.0.0',
+          namespace: 'v1'
+        });
+        return;
+      }
+
+      const result = await this.authService.updateLanguage(user.id, language);
+
+      const statusCode = result.success ? 200 : 400;
+      res.status(statusCode).json({
+        success: result.success,
+        message: result.message,
+        apiVersion: '1.0.0',
+        namespace: 'v1'
+      });
+
+    } catch (error) {
+      console.error('Update language controller error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Language update failed due to server error',
+        apiVersion: '1.0.0',
+        namespace: 'v1'
+      });
+    }
+  };
+
   // Helper method to extract token from request
   private extractToken(req: Request): string | null {
     const authHeader = req.headers.authorization;

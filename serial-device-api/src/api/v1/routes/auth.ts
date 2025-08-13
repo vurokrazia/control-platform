@@ -95,6 +95,11 @@ const authController = new AuthController();
  *           type: boolean
  *           example: false
  *           description: Whether the user's email is verified
+ *         language:
+ *           type: string
+ *           enum: [en, es]
+ *           example: en
+ *           description: User's language preference
  *         lastLoginAt:
  *           type: string
  *           format: date-time
@@ -136,5 +141,6 @@ router.post('/logout', authMiddleware.requireAuth, authController.logout);
 router.get('/me', authMiddleware.requireAuth, authController.getProfile);
 router.post('/sessions/revoke', authMiddleware.requireAuth, authController.revokeAllSessions);
 router.post('/password/change', authMiddleware.requireAuth, authController.changePassword);
+router.put('/language', authMiddleware.requireAuth, authController.updateLanguage);
 
 export default router;

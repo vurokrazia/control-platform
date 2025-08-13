@@ -13,6 +13,7 @@ export class UserRepository implements IUserRepository {
       name: user.name,
       isActive: user.isActive,
       emailVerified: user.emailVerified,
+      language: user.language,
       lastLoginAt: user.lastLoginAt
     };
 
@@ -103,6 +104,21 @@ export class UserRepository implements IUserRepository {
     return result.modifiedCount > 0;
   }
 
+  async updateLanguage(id: string, language: string): Promise<boolean> {
+    if (language !== 'en' && language !== 'es') {
+      return false;
+    }
+    
+    const result = await UserModel.updateOne(
+      { id },
+      { 
+        language: language,
+        updatedAt: new Date()
+      }
+    ).exec();
+    return result.modifiedCount > 0;
+  }
+
   async findActiveUsers(): Promise<User[]> {
     const users = await UserModel.find({ isActive: true })
       .sort({ createdAt: -1 })
@@ -122,6 +138,7 @@ export class UserRepository implements IUserRepository {
       userDoc.id,
       userDoc.isActive,
       userDoc.emailVerified,
+      userDoc.language,
       userDoc.lastLoginAt,
       userDoc.createdAt,
       userDoc.updatedAt

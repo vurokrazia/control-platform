@@ -10,6 +10,7 @@ export interface IUserRepository {
   activateUser(id: string): Promise<boolean>;
   deactivateUser(id: string): Promise<boolean>;
   verifyEmail(id: string): Promise<boolean>;
+  updateLanguage(id: string, language: string): Promise<boolean>;
   findActiveUsers(): Promise<User[]>;
   countUsers(): Promise<number>;
 }

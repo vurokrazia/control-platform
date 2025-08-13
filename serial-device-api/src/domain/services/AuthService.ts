@@ -375,4 +375,50 @@ export class AuthService {
       };
     }
   }
+
+  public async updateLanguage(
+    userId: string,
+    language: string
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      // Validate language
+      if (language !== 'en' && language !== 'es') {
+        return {
+          success: false,
+          message: 'Invalid language. Only "en" and "es" are supported.'
+        };
+      }
+
+      // Get user
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        return {
+          success: false,
+          message: 'User not found'
+        };
+      }
+
+      // Update language
+      const updated = await this.userRepository.updateLanguage(userId, language);
+
+      if (!updated) {
+        return {
+          success: false,
+          message: 'Failed to update language preference'
+        };
+      }
+
+      return {
+        success: true,
+        message: 'Language preference updated successfully'
+      };
+
+    } catch (error) {
+      console.error('Update language error:', error);
+      return {
+        success: false,
+        message: 'Language update failed due to server error'
+      };
+    }
+  }
 }

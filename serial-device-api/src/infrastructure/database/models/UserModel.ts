@@ -9,6 +9,7 @@ export interface IUserDocument extends Document {
   name: string;
   isActive: boolean;
   emailVerified: boolean;
+  language: string;
   lastLoginAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -49,6 +50,11 @@ const UserSchema = new Schema<IUserDocument>({
   emailVerified: {
     type: Boolean,
     default: false
+  },
+  language: {
+    type: String,
+    enum: ['en', 'es'],
+    default: 'en'
   },
   lastLoginAt: {
     type: Date,
