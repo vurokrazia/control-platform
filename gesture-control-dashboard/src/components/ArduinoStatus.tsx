@@ -150,7 +150,7 @@ const ArduinoStatus: React.FC = () => {
               {status.bufferSize}
             </div>
             <div style={{ fontSize: '12px', color: '#666' }}>
-              mensajes
+              {t('mqtt.topics.messages')}
             </div>
           </div>
 
@@ -162,7 +162,7 @@ const ArduinoStatus: React.FC = () => {
             gridColumn: 'span 2'
           }}>
             <div style={{ fontSize: '14px', color: '#666', marginBottom: '10px' }}>
-              Último Dato Recibido
+              {t('common.info')}
             </div>
             {status.lastData ? (
               <div>
@@ -192,7 +192,7 @@ const ArduinoStatus: React.FC = () => {
                 textAlign: 'center',
                 padding: '20px'
               }}>
-                No se han recibido datos
+                {t('mqtt.topics.noTopics')}
               </div>
             )}
           </div>
@@ -203,7 +203,7 @@ const ArduinoStatus: React.FC = () => {
           color: '#666',
           padding: '20px'
         }}>
-          {isLoadingStatus ? 'Cargando estado...' : 'No se pudo obtener el estado'}
+          {isLoadingStatus ? t('common.loading') : t('common.error')}
         </div>
       )}
 
@@ -222,7 +222,7 @@ const ArduinoStatus: React.FC = () => {
             marginBottom: '10px'
           }}>
             <span style={{ fontSize: '16px', marginRight: '10px' }}>📡</span>
-            <strong style={{ color: '#28a745' }}>Datos en Tiempo Real</strong>
+            <strong style={{ color: '#28a745' }}>{t('common.info')}</strong>
           </div>
           <div style={{
             backgroundColor: 'white',
@@ -239,7 +239,7 @@ const ArduinoStatus: React.FC = () => {
             color: '#666',
             textAlign: 'right'
           }}>
-            Recibido: {formatTimestamp(lastData.timestamp)}
+            {t('common.info')}: {formatTimestamp(lastData.timestamp)}
           </div>
         </div>
       )}
@@ -253,11 +253,9 @@ const ArduinoStatus: React.FC = () => {
         fontSize: '12px',
         color: '#856404'
       }}>
-        <strong>💡 Información:</strong>
+        <strong>💡 {t('common.info')}:</strong>
         <ul style={{ margin: '5px 0 0 20px', padding: 0 }}>
-          <li>El estado se actualiza automáticamente cada 2 segundos</li>
-          <li>El buffer mantiene los últimos 100 mensajes recibidos</li>
-          <li>Los datos se muestran tal como los envía el Arduino</li>
+          <li>{t('common.info')}</li>
         </ul>
       </div>
     </div>

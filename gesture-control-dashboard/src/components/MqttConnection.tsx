@@ -190,7 +190,7 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
               <option>{t('devices.noDevices')}</option>
             ) : (
               <>
-                <option value="">Select a device</option>
+                <option value="">{t('mqtt.modal.selectDevice')}</option>
                 {devices.map((device) => (
                   <option key={device.deviceId} value={device.deviceId}>
                     {device.name} ({device.deviceId})
@@ -200,7 +200,7 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
             )}
           </Form.Select>
           <Form.Text className="text-muted">
-            First choose which Arduino device to monitor
+            {t('mqtt.modal.helpText')}
           </Form.Text>
         </Form.Group>
 
@@ -208,14 +208,14 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
         {selectedDevice && (
           <Form.Group className="mb-3">
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <Form.Label className="fw-bold mb-0">Select Topic:</Form.Label>
+              <Form.Label className="fw-bold mb-0">{t('mqtt.topics.addTopic')}:</Form.Label>
               <Button
                 variant="outline-secondary"
                 size="sm"
                 onClick={handleRefreshTopics}
                 disabled={loading}
               >
-                {loading ? '🔄 Loading...' : '🔄 Refresh Topics'}
+                {loading ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
               </Button>
             </div>
             <Form.Select
@@ -224,12 +224,12 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
               disabled={loading || topics.length === 0}
             >
               {loading ? (
-                <option>Loading topics...</option>
+                <option>{t('common.loading')}</option>
               ) : topics.length === 0 ? (
-                <option>No topics available for this device</option>
+                <option>{t('mqtt.topics.noTopics')}</option>
               ) : (
                 <>
-                  <option value="">Select a topic</option>
+                  <option value="">{t('mqtt.topics.addTopic')}</option>
                   {topics.map((topic) => (
                     <option key={topic.id || topic.name} value={topic.name}>
                       {topic.name}
@@ -239,7 +239,7 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
               )}
             </Form.Select>
             <Form.Text className="text-muted">
-              Choose an MQTT topic to monitor messages
+              {t('mqtt.topics.title')}
             </Form.Text>
           </Form.Group>
         )}
@@ -249,24 +249,24 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
             <Alert variant="info" className="mb-3">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <strong>Device:</strong> {selectedDevice.name} ({selectedDevice.deviceId})
+                  <strong>{t('devices.title')}:</strong> {selectedDevice.name} ({selectedDevice.deviceId})
                   <br />
-                  <strong>Topic:</strong> {selectedTopicData.name}
+                  <strong>{t('mqtt.topics.title')}:</strong> {selectedTopicData.name}
                   <br />
-                  <small>Auto-refreshing messages every {refreshInterval}s</small>
+                  <small>{t('common.refresh')} {refreshInterval}s</small>
                 </div>
                 <div style={{ minWidth: '140px' }}>
-                  <Form.Label className="fw-bold small mb-1 d-block">Refresh Interval:</Form.Label>
+                  <Form.Label className="fw-bold small mb-1 d-block">{t('common.refresh')}:</Form.Label>
                   <Form.Select
                     size="sm"
                     value={refreshInterval}
                     onChange={(e) => setRefreshInterval(parseInt(e.target.value))}
                   >
-                    <option value={5}>5 seconds</option>
-                    <option value={15}>15 seconds</option>
-                    <option value={30}>30 seconds</option>
-                    <option value={60}>1 minute</option>
-                    <option value={180}>3 minutes</option>
+                    <option value={5}>5s</option>
+                    <option value={15}>15s</option>
+                    <option value={30}>30s</option>
+                    <option value={60}>1m</option>
+                    <option value={180}>3m</option>
                   </Form.Select>
                 </div>
               </div>
@@ -278,14 +278,14 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
         {selectedTopicData && (
           <div>
             <div className="d-flex justify-content-between align-items-center mb-3">
-              <h6 className="fw-bold mb-0">Messages ({messages.length})</h6>
+              <h6 className="fw-bold mb-0">{t('mqtt.topics.messages')} ({messages.length})</h6>
               <Button
                 variant="outline-secondary"
                 size="sm"
                 onClick={handleRefreshMessages}
                 disabled={loadingMessages}
               >
-                {loadingMessages ? '🔄 Loading...' : '🔄 Refresh'}
+                {loadingMessages ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
               </Button>
             </div>
 
@@ -293,13 +293,13 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
             {loadingMessages && (
               <div className="text-center py-2 mb-2 bg-light rounded">
                 <Spinner animation="border" size="sm" className="me-2" />
-                <small className="text-muted">Loading new messages...</small>
+                <small className="text-muted">{t('common.loading')}</small>
               </div>
             )}
 
             {messages.length === 0 && !loadingMessages ? (
               <Alert variant="info" className="text-center">
-                No messages found for this topic
+                {t('mqtt.topics.noTopics')}
               </Alert>
             ) : (
               <ListGroup style={{ maxHeight: '300px', overflowY: 'auto' }}>
