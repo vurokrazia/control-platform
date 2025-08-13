@@ -150,7 +150,7 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
                       <option value="">{t('mqtt.modal.selectDevice')}</option>
                       {devices.map((device) => (
                         <option key={device.deviceId} value={device.deviceId}>
-                          {device.name} ({device.deviceId})
+                          {device.name && device.name !== device.deviceId ? device.name : `Device ${device.deviceId.split('-')[1] || device.deviceId}`} ({device.deviceId})
                         </option>
                       ))}
                     </>
@@ -201,7 +201,13 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
                 </Button>
               </InputGroup>
               <Form.Text className="text-muted">
-                Topic will be created for: {devices.find(d => d.deviceId === selectedDeviceId)?.name}
+                {t('mqtt.modal.helpText')}: {(() => {
+                  const device = devices.find(d => d.deviceId === selectedDeviceId);
+                  if (!device) return '';
+                  return device.name && device.name !== device.deviceId 
+                    ? device.name 
+                    : `Device ${device.deviceId.split('-')[1] || device.deviceId}`;
+                })()}
               </Form.Text>
             </Form>
           )}
@@ -217,7 +223,13 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
           {selectedDeviceId && (
             <>
               <h6 className="fw-bold mb-3">
-                Topics for {devices.find(d => d.deviceId === selectedDeviceId)?.name}
+                {t('mqtt.topics.title')} {(() => {
+                  const device = devices.find(d => d.deviceId === selectedDeviceId);
+                  if (!device) return '';
+                  return device.name && device.name !== device.deviceId 
+                    ? device.name 
+                    : `Device ${device.deviceId.split('-')[1] || device.deviceId}`;
+                })()}
               </h6>
               {loading ? (
                 <div className="text-center py-4">
