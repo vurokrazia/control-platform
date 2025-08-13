@@ -4,12 +4,14 @@ import JSONPretty from 'react-json-pretty';
 import 'react-json-pretty/themes/monikai.css';
 import { mqttTopicsRepository, MqttTopic, TopicMessage } from '../repositories/mqttTopicsRepository';
 import { devicesRepository, Device } from '../repositories/devicesRepository';
+import { useTranslation } from 'react-i18next';
 
 interface MqttConnectionProps {
   // No props needed - this component manages its own topic selection
 }
 
 const MqttConnection: React.FC<MqttConnectionProps> = () => {
+  const { t } = useTranslation();
   const [devices, setDevices] = useState<Device[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [topics, setTopics] = useState<MqttTopic[]>([]);
@@ -152,9 +154,9 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
   return (
     <Card className="mb-3">
       <Card.Header className="bg-primary text-white d-flex align-items-center">
-        <h5 className="mb-0">📡 MQTT Connection</h5>
+        <h5 className="mb-0">📡 {t('mqtt.connection.title')}</h5>
         <Badge bg="success" className="ms-auto">
-          Connected
+          {t('mqtt.connection.connected')}
         </Badge>
       </Card.Header>
       <Card.Body>
@@ -167,14 +169,14 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
         {/* Device Selection */}
         <Form.Group className="mb-3">
           <div className="d-flex justify-content-between align-items-center mb-2">
-            <Form.Label className="fw-bold mb-0">Select Device:</Form.Label>
+            <Form.Label className="fw-bold mb-0">{t('mqtt.modal.selectDevice')}:</Form.Label>
             <Button
               variant="outline-secondary"
               size="sm"
               onClick={handleRefreshDevices}
               disabled={loadingDevices}
             >
-              {loadingDevices ? '🔄 Loading...' : '🔄 Refresh Devices'}
+              {loadingDevices ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
             </Button>
           </div>
           <Form.Select
@@ -183,9 +185,9 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
             disabled={loadingDevices || devices.length === 0}
           >
             {loadingDevices ? (
-              <option>Loading devices...</option>
+              <option>{t('common.loading')}</option>
             ) : devices.length === 0 ? (
-              <option>No devices available</option>
+              <option>{t('devices.noDevices')}</option>
             ) : (
               <>
                 <option value="">Select a device</option>

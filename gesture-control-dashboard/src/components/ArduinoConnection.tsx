@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Card, Form, Button, Alert, Badge, Row, Col, Accordion } from 'react-bootstrap';
 import { useArduinoContext } from '../context/ArduinoContext';
+import { useTranslation } from 'react-i18next';
 
 const ArduinoConnection: React.FC = () => {
+  const { t } = useTranslation();
   const {
     ports,
     selectedPort,
@@ -59,13 +61,13 @@ const ArduinoConnection: React.FC = () => {
       <Card className="mb-3 border-danger">
         <Card.Body className="text-center">
           <Card.Title className="text-danger">
-            🔌 Servidor Arduino API no disponible
+            🔌 {t('devices.title')} API {t('mqtt.connection.error')}
           </Card.Title>
           <Card.Text className="text-muted">
-            Asegúrate de que el servidor esté ejecutándose en http://localhost:3001
+            {t('mqtt.connection.error')}
           </Card.Text>
           <Button variant="primary" onClick={handleRetryServer}>
-            🔄 Reintentar Conexión
+            🔄 {t('common.refresh')}
           </Button>
         </Card.Body>
       </Card>
@@ -75,7 +77,7 @@ const ArduinoConnection: React.FC = () => {
   return (
     <Card className="mb-3">
       <Card.Header className="bg-primary text-white">
-        <h5 className="mb-0">🔌 Conexión Arduino</h5>
+        <h5 className="mb-0">🔌 {t('devices.title')}</h5>
       </Card.Header>
       <Card.Body>
         {/* Errores */}
@@ -91,10 +93,10 @@ const ArduinoConnection: React.FC = () => {
             {isConnected ? '✅' : '⚠️'}
           </div>
           <Alert.Heading className="h6">
-            {isConnected ? 'Arduino Conectado' : 'Arduino Desconectado'}
+            {isConnected ? t('mqtt.connection.connected') : t('mqtt.connection.disconnected')}
           </Alert.Heading>
           {selectedPort && (
-            <small className="text-muted">Puerto: {selectedPort}</small>
+            <small className="text-muted">{t('mqtt.connection.port')}: {selectedPort}</small>
           )}
         </Alert>
 
@@ -103,16 +105,16 @@ const ArduinoConnection: React.FC = () => {
           <>
             <Row className="mb-3">
               <Col md={8}>
-                <Form.Label className="fw-bold">Seleccionar Puerto:</Form.Label>
+                <Form.Label className="fw-bold">{t('mqtt.modal.selectDevice')}:</Form.Label>
                 <Form.Select
                   value={selectedPort || ''}
                   onChange={(e) => selectPort(e.target.value)}
                   disabled={isLoadingPorts || ports.length === 0}
                 >
                   <option value="">
-                    {isLoadingPorts ? 'Cargando puertos...' : 
-                     ports.length === 0 ? 'No hay puertos disponibles' : 
-                     'Selecciona un puerto'}
+                    {isLoadingPorts ? t('common.loading') : 
+                     ports.length === 0 ? t('devices.noDevices') : 
+                     t('mqtt.modal.selectDevice')}
                   </option>
                   {ports.map((port) => (
                     <option key={port.path} value={port.path}>
@@ -130,14 +132,14 @@ const ArduinoConnection: React.FC = () => {
                   disabled={isLoadingPorts}
                   className="w-100"
                 >
-                  {isLoadingPorts ? '🔄 Cargando...' : '🔄 Refrescar'}
+                  {isLoadingPorts ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
                 </Button>
               </Col>
             </Row>
 
             <Row className="mb-3">
               <Col>
-                <Form.Label className="fw-bold">Velocidad (Baud Rate):</Form.Label>
+                <Form.Label className="fw-bold">{t('devices.deviceType')}:</Form.Label>
                 <Form.Select
                   value={baudRate}
                   onChange={(e) => setBaudRate(parseInt(e.target.value))}
@@ -164,7 +166,7 @@ const ArduinoConnection: React.FC = () => {
                 className="w-100"
                 size="lg"
               >
-                {isConnecting ? '🔄 Conectando...' : '🔌 Conectar'}
+                {isConnecting ? '🔄 ' + t('mqtt.connection.connecting') : '🔌 ' + t('mqtt.connection.connect')}
               </Button>
             ) : (
               <Button
@@ -174,7 +176,7 @@ const ArduinoConnection: React.FC = () => {
                 className="w-100"
                 size="lg"
               >
-                {isConnecting ? '🔄 Desconectando...' : '🔌 Desconectar'}
+                {isConnecting ? '🔄 ' + t('mqtt.connection.connecting') : '🔌 ' + t('mqtt.connection.disconnect')}
               </Button>
             )}
           </Col>
@@ -211,15 +213,15 @@ const ArduinoConnection: React.FC = () => {
           <Accordion className="mt-3">
             <Accordion.Item eventKey="0">
               <Accordion.Header>
-                Ver detalles de puertos <Badge bg="info" className="ms-2">{ports.length}</Badge>
+                {t('common.info')} <Badge bg="info" className="ms-2">{ports.length}</Badge>
               </Accordion.Header>
               <Accordion.Body>
                 {ports.map((port) => (
                   <Card key={port.path} className="mb-2 border-light">
                     <Card.Body className="py-2">
                       <div className="fw-bold text-primary">{port.path}</div>
-                      {port.manufacturer && <small className="text-muted">Fabricante: {port.manufacturer}</small>}
-                      {port.serialNumber && <><br /><small className="text-muted">Serie: {port.serialNumber}</small></>}
+                      {port.manufacturer && <small className="text-muted">{t('devices.deviceName')}: {port.manufacturer}</small>}
+                      {port.serialNumber && <><br /><small className="text-muted">{t('devices.deviceId')}: {port.serialNumber}</small></>}
                       {port.vendorId && <><br /><small className="text-muted">Vendor ID: {port.vendorId}</small></>}
                       {port.productId && <><br /><small className="text-muted">Product ID: {port.productId}</small></>}
                     </Card.Body>

@@ -1,7 +1,9 @@
 import React from 'react';
 import { useArduinoContext } from '../context/ArduinoContext';
+import { useTranslation } from 'react-i18next';
 
 const ArduinoStatus: React.FC = () => {
+  const { t } = useTranslation();
   const {
     status,
     lastData,
@@ -30,7 +32,7 @@ const ArduinoStatus: React.FC = () => {
         textAlign: 'center',
         color: '#666'
       }}>
-        <p>Arduino no conectado. Conecta primero para ver el estado.</p>
+        <p>{t('mqtt.connection.disconnected')}. {t('mqtt.connection.connect')}.</p>
       </div>
     );
   }
@@ -50,7 +52,7 @@ const ArduinoStatus: React.FC = () => {
       }}>
         <div>
           <h3 style={{ margin: 0, color: '#333' }}>
-            📊 Estado del Arduino
+            📊 {t('mqtt.connection.status')}
           </h3>
           {deviceId && (
             <small style={{ color: '#666', fontSize: '0.8rem' }}>
@@ -71,7 +73,7 @@ const ArduinoStatus: React.FC = () => {
             opacity: isLoadingStatus ? 0.6 : 1
           }}
         >
-          {isLoadingStatus ? '🔄' : '🔄'} Actualizar
+          {isLoadingStatus ? '🔄' : '🔄'} {t('common.refresh')}
         </button>
       </div>
 
@@ -89,7 +91,7 @@ const ArduinoStatus: React.FC = () => {
             textAlign: 'center'
           }}>
             <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>
-              Estado
+              {t('mqtt.connection.status')}
             </div>
             <div style={{
               fontSize: '24px',
@@ -102,7 +104,7 @@ const ArduinoStatus: React.FC = () => {
               color: status.isConnected ? '#28a745' : '#dc3545',
               fontWeight: 'bold'
             }}>
-              {status.isConnected ? 'Conectado' : 'Desconectado'}
+              {status.isConnected ? t('mqtt.connection.connected') : t('mqtt.connection.disconnected')}
             </div>
           </div>
 
@@ -114,7 +116,7 @@ const ArduinoStatus: React.FC = () => {
             textAlign: 'center'
           }}>
             <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>
-              Puerto
+              {t('mqtt.connection.port')}
             </div>
             <div style={{
               fontSize: '16px',
