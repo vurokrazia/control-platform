@@ -156,6 +156,7 @@
     "search": "Buscar",
     "filter": "Filtrar",
     "sort": "Ordenar",
-    "refresh": "Actualizar"
+    "refresh": "Actualizar",
+    "actions": "Acciones"
   }
 }

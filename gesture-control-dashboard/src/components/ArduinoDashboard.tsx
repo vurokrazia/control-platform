@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useArduinoContext } from '../context/ArduinoContext';
+import { useTranslation } from 'react-i18next';
 
 const ArduinoDashboard: React.FC = () => {
+  const { t } = useTranslation();
   const {
     isConnected,
     isSendingData,
@@ -48,7 +50,7 @@ const ArduinoDashboard: React.FC = () => {
         textAlign: 'center',
         color: '#666'
       }}>
-        <p>Arduino no conectado. Conecta primero para enviar comandos.</p>
+        <p>{t('mqtt.connection.disconnected')}. {t('mqtt.connection.connect')}.</p>
       </div>
     );
   }
@@ -61,7 +63,7 @@ const ArduinoDashboard: React.FC = () => {
       marginBottom: '20px'
     }}>
       <h3 style={{ margin: '0 0 20px 0', color: '#333' }}>
-        🎮 Panel de Control Arduino
+        🎮 {t('devices.title')}
       </h3>
 
       {/* Envío de mensajes personalizados */}
@@ -72,7 +74,7 @@ const ArduinoDashboard: React.FC = () => {
         marginBottom: '20px'
       }}>
         <h4 style={{ margin: '0 0 15px 0', color: '#333' }}>
-          Enviar Mensaje Personalizado
+          {t('mqtt.topics.message')}
         </h4>
         
         <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
@@ -81,7 +83,7 @@ const ArduinoDashboard: React.FC = () => {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Escribe tu mensaje aquí..."
+            placeholder={t('mqtt.topics.message')}
             disabled={isSendingData}
             style={{
               flex: 1,
@@ -104,7 +106,7 @@ const ArduinoDashboard: React.FC = () => {
               minWidth: '80px'
             }}
           >
-            {isSendingData ? '📤' : '📤'} Enviar
+            {isSendingData ? '📤' : '📤'} {t('mqtt.topics.publish')}
           </button>
         </div>
 
@@ -130,7 +132,7 @@ const ArduinoDashboard: React.FC = () => {
         marginBottom: '20px'
       }}>
         <h4 style={{ margin: '0 0 15px 0', color: '#333' }}>
-          Comandos Rápidos
+          {t('common.actions')}
         </h4>
         
         <div style={{
@@ -188,7 +190,7 @@ const ArduinoDashboard: React.FC = () => {
           borderRadius: '8px'
         }}>
           <h4 style={{ margin: '0 0 15px 0', color: '#333' }}>
-            📜 Historial de Envíos
+            📜 {t('mqtt.topics.messages')}
           </h4>
           
           <div style={{
@@ -231,7 +233,7 @@ const ArduinoDashboard: React.FC = () => {
               cursor: 'pointer'
             }}
           >
-            🗑️ Limpiar Historial
+            🗑️ {t('common.delete')}
           </button>
         </div>
       )}
@@ -245,7 +247,7 @@ const ArduinoDashboard: React.FC = () => {
         fontSize: '12px',
         color: '#1565c0'
       }}>
-        <strong>💡 Consejos:</strong>
+        <strong>💡 {t('common.info')}:</strong>
         <ul style={{ margin: '5px 0 0 20px', padding: 0 }}>
           <li>Presiona Enter para enviar mensajes rápidamente</li>
           <li>Los comandos se envían tal como los escribes</li>

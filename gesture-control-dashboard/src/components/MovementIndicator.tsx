@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Movement } from '../utils/movementDetection';
+import { useTranslation } from 'react-i18next';
 
 interface MovementIndicatorProps {
   currentMovement: Movement | null;
@@ -10,6 +11,7 @@ const MovementIndicator: React.FC<MovementIndicatorProps> = ({
   currentMovement, 
   dominantDirection 
 }) => {
+  const { t } = useTranslation();
   const getDirectionIcon = (direction: Movement['direction']) => {
     switch (direction) {
       case 'up': return '⬆️';
@@ -32,11 +34,11 @@ const MovementIndicator: React.FC<MovementIndicatorProps> = ({
 
   const getDirectionName = (direction: Movement['direction']) => {
     switch (direction) {
-      case 'up': return 'Arriba';
-      case 'down': return 'Abajo';
-      case 'left': return 'Izquierda';
-      case 'right': return 'Derecha';
-      default: return 'Sin movimiento';
+      case 'up': return 'UP';
+      case 'down': return 'DOWN';
+      case 'left': return 'LEFT';
+      case 'right': return 'RIGHT';
+      default: return t('common.info');
     }
   };
 
@@ -48,7 +50,7 @@ const MovementIndicator: React.FC<MovementIndicatorProps> = ({
       marginBottom: '20px'
     }}>
       <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>
-        Detección de Movimiento
+        {t('app.title')}
       </h3>
       
       <div style={{ 
@@ -64,7 +66,7 @@ const MovementIndicator: React.FC<MovementIndicatorProps> = ({
           textAlign: 'center'
         }}>
           <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>
-            Movimiento Actual
+            {t('mqtt.connection.status')}
           </div>
           <div style={{ 
             fontSize: '24px', 
@@ -86,7 +88,7 @@ const MovementIndicator: React.FC<MovementIndicatorProps> = ({
           textAlign: 'center'
         }}>
           <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>
-            Dirección Dominante
+            {t('common.info')}
           </div>
           <div style={{ 
             fontSize: '24px', 
@@ -108,7 +110,7 @@ const MovementIndicator: React.FC<MovementIndicatorProps> = ({
           textAlign: 'center'
         }}>
           <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>
-            Velocidad
+            {t('devices.deviceType')}
           </div>
           <div style={{ 
             fontSize: '18px', 
@@ -119,7 +121,7 @@ const MovementIndicator: React.FC<MovementIndicatorProps> = ({
               (currentMovement.magnitude * 100).toFixed(1) : '0.0'}
           </div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            unidades/s
+            {t('common.info')}
           </div>
         </div>
       </div>

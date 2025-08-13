@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Modal, Button, Form, Alert, Spinner, Row, Col } from 'react-bootstrap';
 import { devicesRepository, Device } from '../repositories/devicesRepository';
+import { useTranslation } from 'react-i18next';
 
 interface DeviceCreateModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ export const DeviceCreateModal: React.FC<DeviceCreateModalProps> = ({
   onClose, 
   onDeviceCreated 
 }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     type: 'arduino',
@@ -32,7 +34,7 @@ export const DeviceCreateModal: React.FC<DeviceCreateModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      setError('Device name is required');
+      setError(t('devices.deviceName') + ' ' + t('auth.validation.nameRequired'));
       return;
     }
 
@@ -67,7 +69,7 @@ export const DeviceCreateModal: React.FC<DeviceCreateModalProps> = ({
       
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error creating device');
+      setError(err instanceof Error ? err.message : t('common.error'));
     } finally {
       setCreating(false);
     }
@@ -83,7 +85,7 @@ export const DeviceCreateModal: React.FC<DeviceCreateModalProps> = ({
   return (
     <Modal show={isOpen} onHide={handleClose} size="lg">
       <Modal.Header closeButton>
-        <Modal.Title>🔧 Create New Device</Modal.Title>
+        <Modal.Title>🔧 {t('devices.addDevice')}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {error && (
@@ -95,25 +97,25 @@ export const DeviceCreateModal: React.FC<DeviceCreateModalProps> = ({
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label className="fw-bold">
-              Device Name <span className="text-danger">*</span>
+              {t('devices.deviceName')} <span className="text-danger">*</span>
             </Form.Label>
             <Form.Control
               type="text"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              placeholder="e.g., Living Room Arduino"
+              placeholder={t('devices.deviceName')}
               disabled={creating}
               required
             />
             <Form.Text className="text-muted">
-              Human-readable name for the device (ID will be auto-generated)
+              {t('devices.deviceName')}
             </Form.Text>
           </Form.Group>
 
           <Row>
             <Col md={6}>
               <Form.Group className="mb-3">
-                <Form.Label className="fw-bold">Device Type</Form.Label>
+                <Form.Label className="fw-bold">{t('devices.deviceType')}</Form.Label>
                 <Form.Select
                   value={formData.type}
                   onChange={(e) => handleInputChange('type', e.target.value)}
@@ -129,7 +131,7 @@ export const DeviceCreateModal: React.FC<DeviceCreateModalProps> = ({
             <Col md={6}>
               <Form.Group className="mb-3">
                 <Form.Label className="fw-bold">
-                  Baud Rate
+                  {t('devices.deviceType')}
                 </Form.Label>
                 <Form.Select
                   value={formData.baudRate.toString()}
@@ -148,17 +150,17 @@ export const DeviceCreateModal: React.FC<DeviceCreateModalProps> = ({
 
           <Form.Group className="mb-4">
             <Form.Label className="fw-bold">
-              Serial Port (Optional)
+              {t('mqtt.connection.port')}
             </Form.Label>
             <Form.Control
               type="text"
               value={formData.port}
               onChange={(e) => handleInputChange('port', e.target.value)}
-              placeholder="e.g., /dev/cu.usbmodem14101 or COM3"
+              placeholder={t('mqtt.connection.port')}
               disabled={creating}
             />
             <Form.Text className="text-muted">
-              Serial port path where the device is connected (can be set later)
+              {t('mqtt.connection.port')}
             </Form.Text>
           </Form.Group>
 
@@ -168,7 +170,7 @@ export const DeviceCreateModal: React.FC<DeviceCreateModalProps> = ({
               onClick={handleClose}
               disabled={creating}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button 
               type="submit" 
@@ -178,10 +180,10 @@ export const DeviceCreateModal: React.FC<DeviceCreateModalProps> = ({
               {creating ? (
                 <>
                   <Spinner size="sm" className="me-2" />
-                  Creating...
+                  {t('common.loading')}
                 </>
               ) : (
-                'Create Device'
+                t('devices.addDevice')
               )}
             </Button>
           </div>

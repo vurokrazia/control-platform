@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Button, Form, Alert, InputGroup } from 'react-bootstrap';
 import { mqttTopicsRepository, MqttTopic } from '../repositories/mqttTopicsRepository';
 import { devicesRepository, Device } from '../repositories/devicesRepository';
+import { useTranslation } from 'react-i18next';
 
 interface MqttDashboardProps {
   // No props needed - this component manages its own topic selection
 }
 
 const MqttDashboard: React.FC<MqttDashboardProps> = () => {
+  const { t } = useTranslation();
   const [customMessage, setCustomMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
@@ -22,14 +24,14 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
 
   // Predefined commands - speed will be dynamically inserted
   const predefinedCommands = [
-    { label: '⬆️ Avanzar (W)', command: 'W', useSpeed: true },
-    { label: '⬇️ Retroceder (S)', command: 'S', useSpeed: true },
-    { label: '⬅️ Girar Izquierda (A)', command: 'A', useSpeed: true },
-    { label: '➡️ Girar Derecha (D)', command: 'D', useSpeed: true },
-    { label: '🛑 Parar Motores (Q)', command: 'Q', useSpeed: false, fixedSpeed: 0 },
-    { label: '🔥 Aumentar Velocidad (+)', command: '+', useSpeed: false, fixedSpeed: 255 },
-    { label: '🐌 Disminuir Velocidad (-)', command: '-', useSpeed: false, fixedSpeed: 100 },
-    { label: '📡 Estado', command: 'STATUS', useSpeed: false, fixedSpeed: 0 },
+    { label: '⬆️ Forward (W)', command: 'W', useSpeed: true },
+    { label: '⬇️ Backward (S)', command: 'S', useSpeed: true },
+    { label: '⬅️ Left (A)', command: 'A', useSpeed: true },
+    { label: '➡️ Right (D)', command: 'D', useSpeed: true },
+    { label: '🛑 Stop (Q)', command: 'Q', useSpeed: false, fixedSpeed: 0 },
+    { label: '🔥 Speed + (+)', command: '+', useSpeed: false, fixedSpeed: 255 },
+    { label: '🐌 Speed - (-)', command: '-', useSpeed: false, fixedSpeed: 100 },
+    { label: '📡 ' + t('mqtt.connection.status'), command: 'STATUS', useSpeed: false, fixedSpeed: 0 },
   ];
 
   useEffect(() => {
@@ -83,7 +85,7 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
 
   const sendMessage = async (message: string) => {
     if (!selectedTopic) {
-      setError('No topic selected');
+      setError(t('mqtt.topics.noTopics'));
       return;
     }
 
@@ -95,7 +97,7 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
       setLastMessage(message);
       setCustomMessage('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error sending message');
+      setError(err instanceof Error ? err.message : t('common.error'));
     } finally {
       setSending(false);
     }
@@ -123,7 +125,7 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
   return (
     <Card>
       <Card.Header className="bg-info text-white">
-        <h5 className="mb-0">📡 MQTT Control Panel</h5>
+        <h5 className="mb-0">📡 {t('mqtt.connection.title')}</h5>
       </Card.Header>
       <Card.Body>
         {error && (
@@ -134,7 +136,7 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
 
         {lastMessage && (
           <Alert variant="success" className="mb-3">
-            <strong>✅ Message Sent to {selectedTopic}:</strong>
+            <strong>✅ {t('mqtt.topics.message')} {selectedTopic}:</strong>
             <pre className="mb-0 mt-2" style={{ fontSize: '0.9em' }}>
               {lastMessage}
             </pre>
@@ -143,31 +145,31 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
 
         {!selectedDevice && (
           <Alert variant="warning" className="mb-3">
-            Please select a device first to see available topics.
+            {t('mqtt.modal.selectDevice')}
           </Alert>
         )}
 
         {!selectedTopic && selectedDevice && (
           <Alert variant="warning" className="mb-3">
-            Please select a topic to send messages.
+            {t('mqtt.topics.addTopic')}
           </Alert>
         )}
 
         {/* Device Selection */}
         <div className="mb-4">
-          <Form.Label className="fw-bold">Device:</Form.Label>
+          <Form.Label className="fw-bold">{t('devices.title')}:</Form.Label>
           <Form.Select
             value={selectedDevice?.deviceId || ''}
             onChange={(e) => handleDeviceChange(e.target.value)}
             disabled={loadingDevices || devices.length === 0}
           >
             {loadingDevices ? (
-              <option>Loading devices...</option>
+              <option>{t('common.loading')}</option>
             ) : devices.length === 0 ? (
-              <option>No devices available</option>
+              <option>{t('devices.noDevices')}</option>
             ) : (
               <>
-                <option value="">Select a device</option>
+                <option value="">{t('mqtt.modal.selectDevice')}</option>
                 {devices.map((device) => (
                   <option key={device.deviceId} value={device.deviceId}>
                     {device.name} ({device.deviceId})
@@ -177,26 +179,26 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
             )}
           </Form.Select>
           <Form.Text className="text-muted">
-            First choose which Arduino device to control
+            {t('mqtt.modal.helpText')}
           </Form.Text>
         </div>
 
         {/* Topic Selection - Only show if device is selected */}
         {selectedDevice && (
           <div className="mb-4">
-            <Form.Label className="fw-bold">Publishing Topic:</Form.Label>
+            <Form.Label className="fw-bold">{t('mqtt.topics.title')}:</Form.Label>
             <Form.Select
               value={selectedTopic}
               onChange={(e) => setSelectedTopic(e.target.value)}
               disabled={loadingTopics || topics.length === 0}
             >
               {loadingTopics ? (
-                <option>Loading topics...</option>
+                <option>{t('common.loading')}</option>
               ) : topics.length === 0 ? (
-                <option>No topics available for this device</option>
+                <option>{t('mqtt.topics.noTopics')}</option>
               ) : (
                 <>
-                  <option value="">Select a topic</option>
+                  <option value="">{t('mqtt.topics.addTopic')}</option>
                   {topics.map((topic) => (
                     <option key={topic.id || topic.name} value={topic.name}>
                       {topic.name}
@@ -206,14 +208,14 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
               )}
             </Form.Select>
             <Form.Text className="text-muted">
-              Choose which topic to publish messages to
+              {t('mqtt.topics.title')}
             </Form.Text>
           </div>
         )}
 
         {/* Speed Control */}
         <div className="mb-4">
-          <Form.Label className="fw-bold">Speed Control: {speed}</Form.Label>
+          <Form.Label className="fw-bold">{t('devices.deviceType')}: {speed}</Form.Label>
           <Form.Range
             min={0}
             max={255}
@@ -231,7 +233,7 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
         {/* Predefined Command Buttons - Only show if device and topic are selected */}
         {selectedDevice && selectedTopic && (
           <div className="mb-4">
-            <h6 className="fw-bold mb-3">Quick Commands for {selectedDevice.name}:</h6>
+            <h6 className="fw-bold mb-3">{t('common.actions')} {selectedDevice.name}:</h6>
             <Row className="g-2">
               {predefinedCommands.map((cmd, index) => (
                 <Col key={index} xs={12} sm={6} md={4} lg={3}>
@@ -254,7 +256,7 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
 
         {/* Custom Message Form */}
         <div>
-          <h6 className="fw-bold mb-3">Custom Message:</h6>
+          <h6 className="fw-bold mb-3">{t('mqtt.topics.message')}:</h6>
           <Form onSubmit={handleCustomSubmit}>
             <InputGroup className="mb-3">
               <Form.Control
@@ -262,7 +264,7 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
                 rows={3}
                 value={customMessage}
                 onChange={(e) => setCustomMessage(e.target.value)}
-                placeholder={`Enter custom JSON message, e.g., {"command":"W","speed":${speed}}`}
+                placeholder={`${t('mqtt.topics.message')}, e.g., {"command":"W","speed":${speed}}`}
                 disabled={sending}
               />
             </InputGroup>
@@ -272,7 +274,7 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
                 variant="primary"
                 disabled={sending || !customMessage.trim() || !selectedTopic}
               >
-                {sending ? '📤 Sending...' : '📤 Send Custom Message'}
+                {sending ? '📤 ' + t('common.loading') : '📤 ' + t('mqtt.topics.publish')}
               </Button>
               <Button
                 type="button"
@@ -280,7 +282,7 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
                 onClick={() => setCustomMessage('')}
                 disabled={sending}
               >
-                Clear
+                {t('common.delete')}
               </Button>
             </div>
           </Form>
@@ -290,7 +292,7 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
 
         {/* Arduino Command Help */}
         <div>
-          <h6 className="fw-bold mb-2">💡 Arduino Command Reference:</h6>
+          <h6 className="fw-bold mb-2">💡 {t('common.info')}:</h6>
           <div className="small text-muted">
             <strong>Format:</strong> <code>{"{"}"command":"W","speed":{speed}{"}"}</code><br />
             <strong>Commands:</strong> W (forward), S (backward), A (left), D (right), Q (stop)<br />

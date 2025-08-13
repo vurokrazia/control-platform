@@ -1,8 +1,10 @@
 import React from 'react';
 import { useHandTracking } from '../hooks/useHandTracking';
 import MovementIndicator from './MovementIndicator';
+import { useTranslation } from 'react-i18next';
 
 const HandTracker: React.FC = () => {
+  const { t } = useTranslation();
   const {
     videoRef,
     canvasRef,
@@ -28,7 +30,7 @@ const HandTracker: React.FC = () => {
         color: '#333',
         marginBottom: '30px'
       }}>
-        🖐️ Detector de Movimiento del Dedo Índice
+        🖐️ {t('app.title')}
       </h1>
 
       {/* Estado de carga */}
@@ -40,7 +42,7 @@ const HandTracker: React.FC = () => {
           borderRadius: '10px',
           marginBottom: '20px'
         }}>
-          <p>Cargando MediaPipe...</p>
+          <p>{t('common.loading')}</p>
         </div>
       )}
 
@@ -53,7 +55,7 @@ const HandTracker: React.FC = () => {
           borderRadius: '10px',
           marginBottom: '20px'
         }}>
-          <strong>Error:</strong> {error}
+          <strong>{t('common.error')}:</strong> {error}
         </div>
       )}
 
@@ -78,7 +80,7 @@ const HandTracker: React.FC = () => {
             transition: 'background-color 0.3s'
           }}
         >
-          {isTracking ? 'Rastreando...' : 'Iniciar Detección'}
+          {isTracking ? t('common.loading') : t('mqtt.connection.connect')}
         </button>
 
         <button
@@ -95,7 +97,7 @@ const HandTracker: React.FC = () => {
             transition: 'background-color 0.3s'
           }}
         >
-          Detener
+          {t('mqtt.connection.disconnect')}
         </button>
       </div>
 
