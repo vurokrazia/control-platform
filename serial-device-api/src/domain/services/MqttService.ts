@@ -18,7 +18,7 @@ export class MqttService {
 
     private connect(): void {
         console.log('Connecting to MQTT broker:', this.brokerUrl);
-        
+
         this.client = mqtt.connect(this.brokerUrl, {
             clientId: `arduino-api-${Math.random().toString(16).substr(2, 8)}`,
             reconnectPeriod: 5000,
@@ -44,17 +44,41 @@ export class MqttService {
         this.client.on('message', async (topic, message) => {
             const messageStr = message.toString();
             console.log(`📨 [${topic}]: ${messageStr}`);
-            
+
             try {
                 // Find topic to get its ID
                 const topics = await this.mqttTopicRepository.findAll();
                 const topicEntity = topics.find(t => t.name === topic);
-                
+
                 if (topicEntity) {
-                    // Save received message to database
-                    const topicMessage = new TopicMessage(messageStr, topicEntity.id);
-                    await this.topicMessageRepository.create(topicMessage);
-                    console.log(`💾 Saved message for topic '${topic}' to database`);
+                    let actualMessage: string;
+                    let userId: string;
+
+                    // Try to parse as JSON payload (from HTTP API)
+                    try {
+                        const payload = JSON.parse(messageStr);
+                        if (payload.message && payload.userId) {
+                            actualMessage = payload.message;
+                            userId = payload.userId;
+                            console.log(`📦 Parsed JSON payload with userId: ${userId}`);
+                        } else {
+                            throw new Error('Invalid JSON payload format');
+                        }
+                    } catch (parseError) {
+                        // Fallback to plain message (from external sources)
+                        actualMessage = messageStr;
+                        userId = topicEntity.userId;
+                        console.log(`📝 Using plain message with topic owner userId: ${userId}`);
+                    }
+
+                    // Only save if we have a userId
+                    if (userId) {
+                        const topicMessage = new TopicMessage(actualMessage, topicEntity.id, userId);
+                        await this.topicMessageRepository.create(topicMessage);
+                        console.log(`💾 Saved message for topic '${topic}' to database`);
+                    } else {
+                        console.log(`⚠️ No userId available for topic '${topic}', message not saved`);
+                    }
                 } else {
                     console.log(`⚠️ Topic '${topic}' not found in database, message not saved`);
                 }
@@ -106,19 +130,23 @@ export class MqttService {
     }
 
     public publish(topic: string, message: string): void {
-        if (!this.client) {
-            console.error('❌ MQTT client not connected');
-            throw new Error('MQTT client not connected');
-        }
-
-        this.client.publish(topic, message, (error) => {
-            if (error) {
-                console.error(`❌ Failed to publish to topic '${topic}':`, error);
-                throw error;
-            } else {
-                console.log(`📤 Published to topic '${topic}': ${message}`);
+        try {
+            if (!this.client) {
+                console.error('❌ MQTT client not connected');
+                throw new Error('MQTT client not connected');
             }
-        });
+
+            this.client.publish(topic, message, (error) => {
+                if (error) {
+                    console.error(`❌ Failed to publish to topic '${topic}':`, error);
+                    throw error;
+                } else {
+                    console.log(`📤 Published to topic '${topic}': ${message}`);
+                }
+            });
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     public disconnect(): void {

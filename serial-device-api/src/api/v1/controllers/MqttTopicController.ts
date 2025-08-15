@@ -17,17 +17,18 @@ export class MqttTopicController {
   public async getAllTopics(req: Request, res: Response): Promise<void> {
     try {
       const user = req.user;
+      const userId = req.userId;
       
-      if (!user) {
+      if (!user || !userId) {
         res.status(401).json({ 
           success: false, 
-          error: 'Unauthorized - User not authenticated' 
+          error: 'Unauthorized - User not authenticated or invalid token' 
         });
         return;
       }
 
       // Only get topics for the authenticated user
-      const topics = await this.mqttTopicRepository.findByUserId(user.id);
+      const topics = await this.mqttTopicRepository.findByUserId(userId);
       
       res.status(200).json({ 
         success: true, 
@@ -44,11 +45,12 @@ export class MqttTopicController {
     try {
       const { name, deviceId } = req.body;
       const user = req.user;
+      const userId = req.userId;
       
-      if (!user) {
+      if (!user || !userId) {
         res.status(401).json({ 
           success: false, 
-          error: 'Unauthorized - User not authenticated' 
+          error: 'Unauthorized - User not authenticated or invalid token' 
         });
         return;
       }
@@ -64,7 +66,7 @@ export class MqttTopicController {
       }
 
       // Create topic with user ownership
-      const newTopic = new MqttTopic(name, deviceId, user.id);
+      const newTopic = new MqttTopic(name, deviceId, userId);
       const createdTopic = await this.mqttTopicRepository.create(newTopic);
       
       // Subscribe to the new topic
@@ -87,17 +89,18 @@ export class MqttTopicController {
     try {
       const { id } = req.params;
       const user = req.user;
+      const userId = req.userId;
       
-      if (!user) {
+      if (!user || !userId) {
         res.status(401).json({ 
           success: false, 
-          error: 'Unauthorized - User not authenticated' 
+          error: 'Unauthorized - User not authenticated or invalid token' 
         });
         return;
       }
       
       // Find topic by ID for the authenticated user only
-      const userTopics = await this.mqttTopicRepository.findByUserId(user.id);
+      const userTopics = await this.mqttTopicRepository.findByUserId(userId);
       const topicEntity = userTopics.find(t => t.id === id);
       
       if (!topicEntity) {
@@ -106,7 +109,7 @@ export class MqttTopicController {
       }
 
       // Check if topic has messages for this user
-      const messageCount = await this.topicMessageRepository.countByTopicOwnerAndUserId(topicEntity.id, user.id);
+      const messageCount = await this.topicMessageRepository.countByTopicOwnerAndUserId(topicEntity.id, userId);
       
       if (messageCount > 0) {
         res.status(400).json({ 
@@ -117,7 +120,7 @@ export class MqttTopicController {
       }
       
       // Delete topic with user ownership verification
-      const deleted = await this.mqttTopicRepository.deleteByNameAndUserId(topicEntity.name, user.id);
+      const deleted = await this.mqttTopicRepository.deleteByNameAndUserId(topicEntity.name, userId);
       
       if (!deleted) {
         res.status(404).json({ success: false, error: 'Topic not found or access denied' });
@@ -140,11 +143,12 @@ export class MqttTopicController {
     try {
       const { topic, message } = req.body;
       const user = req.user;
+      const userId = req.userId;
       
-      if (!user) {
+      if (!user || !userId) {
         res.status(401).json({ 
           success: false, 
-          error: 'Unauthorized - User not authenticated' 
+          error: 'Unauthorized - User not authenticated or invalid token' 
         });
         return;
       }
@@ -168,12 +172,24 @@ export class MqttTopicController {
         return;
       }
 
-      // Publish message to MQTT topic
-      mqttServiceInstance.publish(topic, message);
+      // Publish message to MQTT topic with userId in payload
+      const mqttPayload = JSON.stringify({ message: message, userId: userId });
+      mqttServiceInstance.publish(topic, mqttPayload);
       
       // Save message to database with user ownership
-      const topicMessage = new TopicMessage(message, topicEntity.id, user.id);
-      await this.topicMessageRepository.create(topicMessage);
+      let topicMessage: TopicMessage;
+      try {
+        topicMessage = new TopicMessage(message, topicEntity.id, userId);
+        await this.topicMessageRepository.create(topicMessage);
+      } catch (dbError: any) {
+        console.error('Database error saving message:', dbError);
+        res.status(500).json({ 
+          success: false, 
+          error: 'Failed to save message to database',
+          details: dbError.message 
+        });
+        return;
+      }
       
       res.status(200).json({ 
         success: true, 
