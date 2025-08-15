@@ -9,22 +9,49 @@ export class MqttTopicRepository implements IMqttTopicRepository {
     return topics.map(topic => new MqttTopic(
       topic.name,
       topic.deviceId,
+      topic.userId,
       topic._id?.toString(),
       topic.createdAt
     ));
+  }
+
+  async findByUserId(userId: string): Promise<MqttTopic[]> {
+    const topics = await MqttTopicModel.find({ userId }).sort({ createdAt: -1 });
+    return topics.map(topic => new MqttTopic(
+      topic.name,
+      topic.deviceId,
+      topic.userId,
+      topic._id?.toString(),
+      topic.createdAt
+    ));
+  }
+
+  async findByName(name: string): Promise<MqttTopic | null> {
+    const topic = await MqttTopicModel.findOne({ name });
+    if (!topic) return null;
+    
+    return new MqttTopic(
+      topic.name,
+      topic.deviceId,
+      topic.userId,
+      topic._id?.toString(),
+      topic.createdAt
+    );
   }
 
   async create(topic: MqttTopic): Promise<MqttTopic> {
     const newTopic = new MqttTopicModel({ 
       _id: topic.id,
       name: topic.name,
-      deviceId: topic.deviceId
+      deviceId: topic.deviceId,
+      userId: topic.userId
     });
     const savedTopic = await newTopic.save();
     
     return new MqttTopic(
       savedTopic.name,
       savedTopic.deviceId,
+      savedTopic.userId,
       savedTopic._id?.toString(),
       savedTopic.createdAt
     );
@@ -32,6 +59,11 @@ export class MqttTopicRepository implements IMqttTopicRepository {
 
   async deleteByName(name: string): Promise<boolean> {
     const result = await MqttTopicModel.findOneAndDelete({ name });
+    return result !== null;
+  }
+
+  async deleteByNameAndUserId(name: string, userId: string): Promise<boolean> {
+    const result = await MqttTopicModel.findOneAndDelete({ name, userId });
     return result !== null;
   }
 }

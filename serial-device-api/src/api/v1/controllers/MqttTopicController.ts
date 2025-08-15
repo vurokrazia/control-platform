@@ -14,9 +14,20 @@ export class MqttTopicController {
     this.topicMessageRepository = new TopicMessageRepository();
   }
   
-  public async getAllTopics(_req: Request, res: Response): Promise<void> {
+  public async getAllTopics(req: Request, res: Response): Promise<void> {
     try {
-      const topics = await this.mqttTopicRepository.findAll();
+      const user = req.user;
+      
+      if (!user) {
+        res.status(401).json({ 
+          success: false, 
+          error: 'Unauthorized - User not authenticated' 
+        });
+        return;
+      }
+
+      // Only get topics for the authenticated user
+      const topics = await this.mqttTopicRepository.findByUserId(user.id);
       
       res.status(200).json({ 
         success: true, 
@@ -32,7 +43,16 @@ export class MqttTopicController {
   public async createTopic(req: Request, res: Response): Promise<void> {
     try {
       const { name, deviceId } = req.body;
+      const user = req.user;
       
+      if (!user) {
+        res.status(401).json({ 
+          success: false, 
+          error: 'Unauthorized - User not authenticated' 
+        });
+        return;
+      }
+
       if (!name) {
         res.status(400).json({ success: false, error: 'Topic name is required' });
         return;
@@ -43,7 +63,8 @@ export class MqttTopicController {
         return;
       }
 
-      const newTopic = new MqttTopic(name, deviceId);
+      // Create topic with user ownership
+      const newTopic = new MqttTopic(name, deviceId, user.id);
       const createdTopic = await this.mqttTopicRepository.create(newTopic);
       
       // Subscribe to the new topic
@@ -55,7 +76,7 @@ export class MqttTopicController {
       });
     } catch (error: any) {
       if (error.code === 11000) {
-        res.status(400).json({ success: false, error: 'Topic already exists' });
+        res.status(400).json({ success: false, error: 'Topic already exists for this user' });
       } else {
         res.status(500).json({ success: false, error: 'Internal server error' });
       }
@@ -65,18 +86,27 @@ export class MqttTopicController {
   public async deleteTopic(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const user = req.user;
       
-      // Find topic by ID
-      const topics = await this.mqttTopicRepository.findAll();
-      const topicEntity = topics.find(t => t.id === id);
+      if (!user) {
+        res.status(401).json({ 
+          success: false, 
+          error: 'Unauthorized - User not authenticated' 
+        });
+        return;
+      }
+      
+      // Find topic by ID for the authenticated user only
+      const userTopics = await this.mqttTopicRepository.findByUserId(user.id);
+      const topicEntity = userTopics.find(t => t.id === id);
       
       if (!topicEntity) {
-        res.status(404).json({ success: false, error: 'Topic not found' });
+        res.status(404).json({ success: false, error: 'Topic not found or access denied' });
         return;
       }
 
-      // Check if topic has messages
-      const messageCount = await this.topicMessageRepository.countByTopicOwner(topicEntity.id);
+      // Check if topic has messages for this user
+      const messageCount = await this.topicMessageRepository.countByTopicOwnerAndUserId(topicEntity.id, user.id);
       
       if (messageCount > 0) {
         res.status(400).json({ 
@@ -86,10 +116,11 @@ export class MqttTopicController {
         return;
       }
       
-      const deleted = await this.mqttTopicRepository.deleteByName(topicEntity.name);
+      // Delete topic with user ownership verification
+      const deleted = await this.mqttTopicRepository.deleteByNameAndUserId(topicEntity.name, user.id);
       
       if (!deleted) {
-        res.status(404).json({ success: false, error: 'Topic not found' });
+        res.status(404).json({ success: false, error: 'Topic not found or access denied' });
         return;
       }
       
@@ -108,7 +139,16 @@ export class MqttTopicController {
   public async publishMessage(req: Request, res: Response): Promise<void> {
     try {
       const { topic, message } = req.body;
+      const user = req.user;
       
+      if (!user) {
+        res.status(401).json({ 
+          success: false, 
+          error: 'Unauthorized - User not authenticated' 
+        });
+        return;
+      }
+
       if (!topic) {
         res.status(400).json({ success: false, error: 'Topic is required' });
         return;
@@ -119,20 +159,20 @@ export class MqttTopicController {
         return;
       }
 
-      // Find topic to get its ID
+      // Find topic to get its ID - from all topics
       const topics = await this.mqttTopicRepository.findAll();
       const topicEntity = topics.find(t => t.name === topic);
       
       if (!topicEntity) {
-        res.status(404).json({ success: false, error: 'Topic not found' });
+        res.status(404).json({ success: false, error: 'Topic not found or access denied' });
         return;
       }
 
       // Publish message to MQTT topic
       mqttServiceInstance.publish(topic, message);
       
-      // Save message to database
-      const topicMessage = new TopicMessage(message, topicEntity.id);
+      // Save message to database with user ownership
+      const topicMessage = new TopicMessage(message, topicEntity.id, user.id);
       await this.topicMessageRepository.create(topicMessage);
       
       res.status(200).json({ 
