@@ -24,7 +24,13 @@ const swaggerOptions: swaggerJsdoc.Options = {
         - **Connections**: Serial device communication
         
         ## Authentication
-        Currently no authentication required.
+        JWT Bearer token authentication required for all endpoints except registration and login.
+        Include Authorization header: 'Bearer <your-jwt-token>'
+        
+        ## Security
+        - All data is filtered by authenticated user ownership
+        - Users can only access their own devices, topics, and messages
+        - 404 responses are returned for unauthorized resource access
         
         ## Rate Limiting
         No rate limiting currently implemented.
@@ -667,6 +673,14 @@ const swaggerOptions: swaggerJsdoc.Options = {
           required: ['success', 'error']
         }
       },
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'JWT authentication token. Include as Authorization: Bearer <token>'
+        }
+      },
       parameters: {
         DeviceId: {
           name: 'deviceId',
@@ -718,6 +732,34 @@ const swaggerOptions: swaggerJsdoc.Options = {
               example: {
                 success: false,
                 error: 'Device ID requerido',
+                apiVersion: '1.0.0',
+                namespace: 'v1'
+              }
+            }
+          }
+        },
+        Unauthorized: {
+          description: 'Authentication required - missing or invalid JWT token',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/Error' },
+              example: {
+                success: false,
+                error: 'Unauthorized - User not authenticated or invalid token',
+                apiVersion: '1.0.0',
+                namespace: 'v1'
+              }
+            }
+          }
+        },
+        Forbidden: {
+          description: 'Access denied - insufficient permissions',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/Error' },
+              example: {
+                success: false,
+                error: 'Access denied - insufficient permissions',
                 apiVersion: '1.0.0',
                 namespace: 'v1'
               }
