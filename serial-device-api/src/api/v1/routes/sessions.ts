@@ -1,12 +1,16 @@
 import express from 'express';
 import { SessionsController } from '../controllers/SessionsController';
 import { versionMiddleware } from '../middleware/versionMiddleware';
+import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = express.Router({ mergeParams: true });
 const sessionsController = new SessionsController();
 
 // Apply version middleware
 router.use(versionMiddleware);
+
+// Apply authentication middleware
+router.use(authMiddleware.requireAuth);
 
 /**
  * @swagger

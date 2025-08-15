@@ -1,12 +1,16 @@
 import express from 'express';
 import { SerialPortsController } from '../controllers/SerialPortsController';
 import { versionMiddleware } from '../middleware/versionMiddleware';
+import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = express.Router();
 const serialPortsController = new SerialPortsController();
 
 // Apply version middleware
 router.use(versionMiddleware);
+
+// Apply authentication middleware
+router.use(authMiddleware.requireAuth);
 
 /**
  * @swagger

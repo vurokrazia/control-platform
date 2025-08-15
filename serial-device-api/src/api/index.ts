@@ -1,7 +1,20 @@
 import express from 'express';
 import v1Routes from './v1';
+import { authMiddleware } from './v1/middleware/authMiddleware';
 
 const router = express.Router();
+
+// Global authentication middleware for ALL API requests
+// Exclude only auth endpoints
+router.use((req, res, next) => {
+  // Allow auth endpoints without token
+  if (req.path.startsWith('/v1/auth/register') || req.path.startsWith('/v1/auth/login')) {
+    return next();
+  }
+  
+  // Require authentication for all other endpoints
+  return authMiddleware.requireAuth(req, res, next);
+});
 
 // Mount API versions
 router.use('/v1', v1Routes);
