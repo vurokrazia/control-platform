@@ -38,7 +38,7 @@ export class ArduinoService {
     );
   }
 
-  async init(portName: string, baudRate: number = 9600, deviceId?: string): Promise<ConnectionResult> {
+  async init(portName: string, baudRate: number = 9600, deviceId?: string, userId?: string): Promise<ConnectionResult> {
     try {
       console.log(`[Arduino] Connecting to port ${portName} at ${baudRate} baud...`);
       
@@ -62,7 +62,7 @@ export class ArduinoService {
       
       this.currentDeviceId = deviceId || `arduino_${portName.replace(/[^a-zA-Z0-9]/g, '_')}`;
       
-      await this.initializeOrUpdateDevice(portName, baudRate);
+      await this.initializeOrUpdateDevice(portName, baudRate, userId);
       await this.deviceService.startDeviceSession(this.currentDeviceId);
       
       console.log(`✅ [Arduino] Connected successfully to ${portName} (Device ID: ${this.currentDeviceId})`);
@@ -75,17 +75,24 @@ export class ArduinoService {
     }
   }
 
-  private async initializeOrUpdateDevice(portName: string, baudRate: number): Promise<void> {
+  private async initializeOrUpdateDevice(portName: string, baudRate: number, userId?: string): Promise<void> {
     if (!this.currentDeviceId) return;
 
     const deviceRepository = new DeviceRepository();
     let device = await deviceRepository.findByDeviceId(this.currentDeviceId);
 
     if (!device) {
+      // Only create device if userId is provided (from authenticated user)
+      if (!userId) {
+        console.error('❌ Cannot create device without userId');
+        return;
+      }
+      
       device = await deviceRepository.create({
         deviceId: this.currentDeviceId,
         name: `Arduino ${portName}`,
         type: 'arduino',
+        userId: userId,
         serialPort: {
           path: portName,
           baudRate

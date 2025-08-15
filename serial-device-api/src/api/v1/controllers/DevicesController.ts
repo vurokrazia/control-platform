@@ -239,7 +239,7 @@ export class DevicesController {
 
       // Connect using connection manager
       const controller = await this.connectionManager.createConnection(id, port, parseInt(baudRate.toString()));
-      const result = await controller.init(port, parseInt(baudRate.toString()), id);
+      const result = await controller.init(port, parseInt(baudRate.toString()), id, userId);
 
       if (result.success) {
         res.json({
