@@ -83,6 +83,14 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
     }
   };
 
+  const handleRefreshDevices = async () => {
+    await loadDevices();
+  };
+
+  const handleRefreshTopics = async () => {
+    await loadTopics();
+  };
+
   const sendMessage = async (message: string) => {
     if (!selectedTopic) {
       setError(t('mqtt.topics.noTopics'));
@@ -157,7 +165,17 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
 
         {/* Device Selection */}
         <div className="mb-4">
-          <Form.Label className="fw-bold">{t('devices.title')}:</Form.Label>
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <Form.Label className="fw-bold mb-0">{t('devices.title')}:</Form.Label>
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={handleRefreshDevices}
+              disabled={loadingDevices}
+            >
+              {loadingDevices ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
+            </Button>
+          </div>
           <Form.Select
             value={selectedDevice?.deviceId || ''}
             onChange={(e) => handleDeviceChange(e.target.value)}
@@ -186,7 +204,17 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
         {/* Topic Selection - Only show if device is selected */}
         {selectedDevice && (
           <div className="mb-4">
-            <Form.Label className="fw-bold">{t('mqtt.topics.title')}:</Form.Label>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <Form.Label className="fw-bold mb-0">{t('mqtt.topics.title')}:</Form.Label>
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={handleRefreshTopics}
+                disabled={loadingTopics}
+              >
+                {loadingTopics ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
+              </Button>
+            </div>
             <Form.Select
               value={selectedTopic}
               onChange={(e) => setSelectedTopic(e.target.value)}
