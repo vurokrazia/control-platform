@@ -14,10 +14,20 @@ export class DevicesController {
     this.connectionManager = ConnectionManager.getInstance();
   }
 
-  // GET /devices - List all devices
-  async index(_req: Request, res: Response): Promise<void> {
+  // GET /devices - List user's devices only
+  async index(req: Request, res: Response): Promise<void> {
     try {
-      const devices = await this.deviceRepository.findAll();
+      const userId = req.userId;
+      
+      if (!userId) {
+        res.status(401).json({ 
+          success: false, 
+          error: 'Unauthorized - User not authenticated or invalid token' 
+        });
+        return;
+      }
+
+      const devices = await this.deviceRepository.findByUserId(userId);
       res.json({
         success: true,
         data: devices,
@@ -33,6 +43,15 @@ export class DevicesController {
   async create(req: Request, res: Response): Promise<void> {
     try {
       const { name, type = 'arduino', port, baudRate = 9600 } = req.body;
+      const userId = req.userId;
+      
+      if (!userId) {
+        res.status(401).json({ 
+          success: false, 
+          error: 'Unauthorized - User not authenticated or invalid token' 
+        });
+        return;
+      }
       
       if (!name) {
         res.status(400).json({ 
@@ -49,6 +68,7 @@ export class DevicesController {
         deviceId,
         name,
         type,
+        userId,
         status: {
           isConnected: false,
           bufferSize: 0
@@ -83,16 +103,26 @@ export class DevicesController {
     }
   }
 
-  // GET /devices/:id - Get specific device
+  // GET /devices/:id - Get specific user device
   async show(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const device = await this.deviceRepository.findByDeviceId(id);
+      const userId = req.userId;
+      
+      if (!userId) {
+        res.status(401).json({ 
+          success: false, 
+          error: 'Unauthorized - User not authenticated or invalid token' 
+        });
+        return;
+      }
+
+      const device = await this.deviceRepository.findByDeviceIdAndUserId(id, userId);
       
       if (!device) {
         res.status(404).json({ 
           success: false, 
-          error: `Device ${id} not found` 
+          error: `Device ${id} not found or access denied` 
         });
         return;
       }
@@ -115,24 +145,33 @@ export class DevicesController {
     }
   }
 
-  // GET /devices/:id/topics - Get MQTT topics for device
+  // GET /devices/:id/topics - Get MQTT topics for user's device
   async getTopics(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const userId = req.userId;
       
-      // Check if device exists
-      const device = await this.deviceRepository.findByDeviceId(id);
+      if (!userId) {
+        res.status(401).json({ 
+          success: false, 
+          error: 'Unauthorized - User not authenticated or invalid token' 
+        });
+        return;
+      }
+      
+      // Check if device exists and belongs to user
+      const device = await this.deviceRepository.findByDeviceIdAndUserId(id, userId);
       if (!device) {
         res.status(404).json({ 
           success: false, 
-          error: `Device ${id} not found` 
+          error: `Device ${id} not found or access denied` 
         });
         return;
       }
 
-      // Get topics for this device
-      const allTopics = await this.mqttTopicRepository.findAll();
-      const deviceTopics = allTopics.filter(topic => topic.deviceId === id);
+      // Get topics for this device (filtered by user)
+      const userTopics = await this.mqttTopicRepository.findByUserId(userId);
+      const deviceTopics = userTopics.filter(topic => topic.deviceId === id);
 
       res.json({
         success: true,
@@ -154,6 +193,15 @@ export class DevicesController {
     try {
       const { id } = req.params;
       const { port, baudRate = 9600 } = req.body;
+      const userId = req.userId;
+
+      if (!userId) {
+        res.status(401).json({ 
+          success: false, 
+          error: 'Unauthorized - User not authenticated or invalid token' 
+        });
+        return;
+      }
 
       if (!port) {
         res.status(400).json({ 
@@ -163,13 +211,14 @@ export class DevicesController {
         return;
       }
 
-      // Create or get device record
-      let device = await this.deviceRepository.findByDeviceId(id);
+      // Create or get device record (only for this user)
+      let device = await this.deviceRepository.findByDeviceIdAndUserId(id, userId);
       if (!device) {
         device = await this.deviceRepository.create({
           deviceId: id,
           name: `Device ${id}`,
           type: 'arduino',
+          userId: userId,
           serialPort: {
             path: port,
             baudRate: parseInt(baudRate.toString())
@@ -208,10 +257,29 @@ export class DevicesController {
     }
   }
 
-  // POST /devices/:id/disconnect - Disconnect device
+  // POST /devices/:id/disconnect - Disconnect user's device
   async disconnect(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const userId = req.userId;
+      
+      if (!userId) {
+        res.status(401).json({ 
+          success: false, 
+          error: 'Unauthorized - User not authenticated or invalid token' 
+        });
+        return;
+      }
+      
+      // Verify device ownership
+      const device = await this.deviceRepository.findByDeviceIdAndUserId(id, userId);
+      if (!device) {
+        res.status(404).json({ 
+          success: false, 
+          error: `Device ${id} not found or access denied` 
+        });
+        return;
+      }
       
       const success = await this.connectionManager.removeConnection(id);
       
@@ -233,10 +301,29 @@ export class DevicesController {
     }
   }
 
-  // GET /devices/:id/status - Get device status
+  // GET /devices/:id/status - Get user device status
   async status(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const userId = req.userId;
+      
+      if (!userId) {
+        res.status(401).json({ 
+          success: false, 
+          error: 'Unauthorized - User not authenticated or invalid token' 
+        });
+        return;
+      }
+      
+      // Verify device ownership
+      const device = await this.deviceRepository.findByDeviceIdAndUserId(id, userId);
+      if (!device) {
+        res.status(404).json({ 
+          success: false, 
+          error: `Device ${id} not found or access denied` 
+        });
+        return;
+      }
       
       const controller = this.connectionManager.getConnection(id);
       if (!controller) {
