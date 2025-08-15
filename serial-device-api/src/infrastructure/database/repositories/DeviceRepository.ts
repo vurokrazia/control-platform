@@ -8,8 +8,18 @@ export class DeviceRepository implements IDeviceRepository {
     return devices.map(this.toEntity);
   }
 
+  async findByUserId(userId: string): Promise<Device[]> {
+    const devices = await DeviceModel.find({ userId });
+    return devices.map(this.toEntity);
+  }
+
   async findByDeviceId(deviceId: string): Promise<Device | null> {
     const device = await DeviceModel.findOne({ deviceId });
+    return device ? this.toEntity(device) : null;
+  }
+
+  async findByDeviceIdAndUserId(deviceId: string, userId: string): Promise<Device | null> {
+    const device = await DeviceModel.findOne({ deviceId, userId });
     return device ? this.toEntity(device) : null;
   }
 
@@ -52,6 +62,7 @@ export class DeviceRepository implements IDeviceRepository {
       deviceId: deviceDoc.deviceId,
       name: deviceDoc.name,
       type: deviceDoc.type,
+      userId: deviceDoc.userId,
       serialPort: deviceDoc.serialPort,
       status: deviceDoc.status,
       statusHistory: deviceDoc.statusHistory,

@@ -30,11 +30,15 @@ const DeviceSchema = new Schema({
   deviceId: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   type: { type: String, required: true },
+  userId: { type: String, required: true, ref: 'User' },
   serialPort: { type: SerialPortInfoSchema, required: false },
   status: { type: DeviceStatusSchema, required: true },
   statusHistory: { type: DeviceStatusHistorySchema, required: true }
 }, {
   timestamps: true
 });
+
+// Index for user-based queries
+DeviceSchema.index({ userId: 1 });
 
 export const DeviceModel = mongoose.model<DeviceDocument>('Device', DeviceSchema);
