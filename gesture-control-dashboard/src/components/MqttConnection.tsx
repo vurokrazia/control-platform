@@ -22,7 +22,10 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [selectedTopicData, setSelectedTopicData] = useState<MqttTopic | null>(null);
   const [refreshInterval, setRefreshInterval] = useState(5); // Default 5 seconds
+  const [autoRefreshDevices, setAutoRefreshDevices] = useState(false); // Auto refresh devices
+  const [lastDeviceUpdate, setLastDeviceUpdate] = useState<Date>(new Date());
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const deviceIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     loadDevices();
@@ -48,11 +51,29 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
     return () => stopAutoRefresh();
   }, [selectedTopicData, refreshInterval]);
 
+  useEffect(() => {
+    if (autoRefreshDevices) {
+      startDeviceAutoRefresh();
+    } else {
+      stopDeviceAutoRefresh();
+    }
+
+    return () => stopDeviceAutoRefresh();
+  }, [autoRefreshDevices]);
+
   const loadDevices = async () => {
     setLoadingDevices(true);
     setError(null);
     try {
       const devicesList = await devicesRepository.getAllDevices();
+      
+      // Check if devices list actually changed
+      const devicesChanged = JSON.stringify(devices) !== JSON.stringify(devicesList);
+      if (devicesChanged) {
+        setLastDeviceUpdate(new Date());
+        console.log('📱 Devices list updated:', devicesList.length, 'devices');
+      }
+      
       setDevices(devicesList);
       
       if (devicesList.length > 0 && !selectedDevice) {
@@ -127,6 +148,20 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
     }
   };
 
+  const startDeviceAutoRefresh = () => {
+    stopDeviceAutoRefresh(); // Clear any existing interval
+    deviceIntervalRef.current = setInterval(() => {
+      loadDevices();
+    }, 30000); // Refresh devices every 30 seconds
+  };
+
+  const stopDeviceAutoRefresh = () => {
+    if (deviceIntervalRef.current) {
+      clearInterval(deviceIntervalRef.current);
+      deviceIntervalRef.current = null;
+    }
+  };
+
   const handleDeviceChange = (deviceId: string) => {
     const device = devices.find(d => d.deviceId === deviceId);
     setSelectedDevice(device || null);
@@ -170,14 +205,24 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
         <Form.Group className="mb-3">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <Form.Label className="fw-bold mb-0">{t('mqtt.modal.selectDevice')}:</Form.Label>
-            <Button
-              variant="outline-secondary"
-              size="sm"
-              onClick={handleRefreshDevices}
-              disabled={loadingDevices}
-            >
-              {loadingDevices ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
-            </Button>
+            <div className="d-flex gap-2">
+              <Button
+                variant={autoRefreshDevices ? "success" : "outline-secondary"}
+                size="sm"
+                onClick={() => setAutoRefreshDevices(!autoRefreshDevices)}
+                title={autoRefreshDevices ? t('common.autoRefreshOn') : t('common.autoRefreshOff')}
+              >
+                {autoRefreshDevices ? '⏰ Auto' : '⏰ Manual'}
+              </Button>
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={handleRefreshDevices}
+                disabled={loadingDevices}
+              >
+                {loadingDevices ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
+              </Button>
+            </div>
           </div>
           <Form.Select
             value={selectedDevice?.deviceId || ''}
@@ -201,6 +246,11 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
           </Form.Select>
           <Form.Text className="text-muted">
             {t('mqtt.modal.helpText')}
+            {autoRefreshDevices && (
+              <span className="ms-2 text-success">
+                ⏰ {t('common.autoRefresh')} (30s)
+              </span>
+            )}
           </Form.Text>
         </Form.Group>
 
