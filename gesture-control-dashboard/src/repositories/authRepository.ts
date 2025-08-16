@@ -18,6 +18,7 @@ export interface User {
   email: string;
   emailVerified: boolean;
   isActive: boolean;
+  language: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -119,6 +120,54 @@ export class AuthRepository {
       return {
         success: false,
         error: error.response?.data?.error || 'Password change failed'
+      };
+    }
+  }
+
+  async updateLanguage(language: string): Promise<AuthResponse> {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        return { success: false, error: 'No token found' };
+      }
+
+      const response = await axios.put(`${this.baseURL}/language`, {
+        language
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Language update failed'
+      };
+    }
+  }
+
+  async getLanguagePreference(): Promise<{ success: boolean; language?: string; error?: string }> {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        return { success: false, error: 'No token found' };
+      }
+
+      const response = await axios.get(`${this.baseURL}/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success && response.data.user) {
+        return { 
+          success: true, 
+          language: response.data.user.language || 'en' 
+        };
+      }
+      
+      return { success: false, error: 'Failed to get language preference' };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to get language preference'
       };
     }
   }

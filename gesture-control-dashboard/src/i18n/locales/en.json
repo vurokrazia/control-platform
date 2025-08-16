@@ -104,7 +104,16 @@
       "publish": "Publish",
       "message": "Message",
       "noTopics": "No topics configured",
-      "messages": "Messages"
+      "messages": "Messages",
+      "autoSubscribe": "Auto-subscribe on startup",
+      "subscriptionStatus": {
+        "auto": "Auto",
+        "manual": "Manual"
+      },
+      "notSubscribed": {
+        "title": "Topic Not Subscribed",
+        "message": "This topic has auto-subscription disabled. Messages cannot be sent until you enable auto-subscription in the topic settings."
+      }
     },
     "modal": {
       "title": "Configure MQTT Topics",
@@ -157,6 +166,9 @@
     "filter": "Filter",
     "sort": "Sort",
     "refresh": "Refresh",
-    "actions": "Actions"
+    "actions": "Actions",
+    "autoRefresh": "Auto-refresh",
+    "autoRefreshOn": "Auto-refresh enabled",
+    "autoRefreshOff": "Auto-refresh disabled"
   }
 }

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { authRepository, type User } from '../repositories/authRepository';
+import i18n from '../i18n';
 
 interface AuthState {
   // State
@@ -45,6 +46,11 @@ export const useAuthStore = create<AuthState>()(
             // Store token in localStorage
             localStorage.setItem('auth_token', token);
             
+            // Set language from user preference
+            if (user.language) {
+              i18n.changeLanguage(user.language);
+            }
+            
             set({
               user,
               token,
@@ -81,6 +87,11 @@ export const useAuthStore = create<AuthState>()(
             
             // Store token in localStorage
             localStorage.setItem('auth_token', token);
+            
+            // Set language from user preference (default to 'en' for new users)
+            if (user.language) {
+              i18n.changeLanguage(user.language);
+            }
             
             set({
               user,
@@ -139,6 +150,11 @@ export const useAuthStore = create<AuthState>()(
           const result = await authRepository.getProfile();
           
           if (result.success && result.user) {
+            // Set language from user preference
+            if (result.user.language) {
+              i18n.changeLanguage(result.user.language);
+            }
+            
             set({
               user: result.user,
               isLoading: false,
@@ -163,8 +179,18 @@ export const useAuthStore = create<AuthState>()(
         if (token) {
           set({ token });
           
-          // Validate token by getting profile
+          // Validate token and get user profile (includes language preference)
           await get().getProfile();
+        } else {
+          // For non-authenticated users, try to get language preference if they have a stored token
+          try {
+            const languageResult = await authRepository.getLanguagePreference();
+            if (languageResult.success && languageResult.language) {
+              i18n.changeLanguage(languageResult.language);
+            }
+          } catch (error) {
+            // Silently fail - user is not authenticated
+          }
         }
       }
     }),

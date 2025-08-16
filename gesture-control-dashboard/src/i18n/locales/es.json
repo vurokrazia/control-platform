@@ -104,7 +104,16 @@
       "publish": "Publicar",
       "message": "Mensaje",
       "noTopics": "No hay temas configurados",
-      "messages": "Mensajes"
+      "messages": "Mensajes",
+      "autoSubscribe": "Auto-suscribirse al inicio",
+      "subscriptionStatus": {
+        "auto": "Auto",
+        "manual": "Manual"
+      },
+      "notSubscribed": {
+        "title": "Tema No Suscrito",
+        "message": "Este tema tiene la auto-suscripción deshabilitada. No se pueden enviar mensajes hasta que habilites la auto-suscripción en la configuración del tema."
+      }
     },
     "modal": {
       "title": "Configurar Temas MQTT",
@@ -157,6 +166,9 @@
     "filter": "Filtrar",
     "sort": "Ordenar",
     "refresh": "Actualizar",
-    "actions": "Acciones"
+    "actions": "Acciones",
+    "autoRefresh": "Auto-actualizar",
+    "autoRefreshOn": "Auto-actualización habilitada",
+    "autoRefreshOff": "Auto-actualización deshabilitada"
   }
 }
