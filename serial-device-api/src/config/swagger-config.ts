@@ -19,8 +19,8 @@ const swaggerOptions: swaggerJsdoc.Options = {
         
         ## Core Functionality
         - **Devices**: Create and manage Arduino devices
-        - **MQTT Topics**: Device-specific topic management
-        - **Messages**: Publish and retrieve topic messages
+        - **MQTT Topics**: Device-specific topic management with auto-subscribe
+        - **Topic Messages**: Publish and retrieve topic messages with history
         - **Connections**: Serial device communication
         
         ## Authentication
@@ -65,12 +65,12 @@ const swaggerOptions: swaggerJsdoc.Options = {
         description: 'Arduino device connection and communication'
       },
       {
-        name: 'MQTT',
-        description: 'MQTT topic management and messaging'
+        name: 'MQTT Topics',
+        description: 'MQTT topic management and configuration'
       },
       {
-        name: 'Topics',
-        description: 'Topic message history and monitoring'
+        name: 'Topic Messages',
+        description: 'Topic message publishing and history'
       },
       {
         name: 'Status',
@@ -349,13 +349,28 @@ const swaggerOptions: swaggerJsdoc.Options = {
               example: 'device-1728912345678-ab3cd9ef2',
               description: 'Associated device identifier'
             },
+            autoSubscribe: {
+              type: 'boolean',
+              example: true,
+              description: 'Whether to automatically subscribe to this topic'
+            },
+            userId: {
+              type: 'string',
+              example: 'user-a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+              description: 'User who owns this topic'
+            },
             createdAt: {
               type: 'string',
               format: 'date-time',
               example: '2024-01-20T10:00:00.000Z'
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-20T10:30:00.000Z'
             }
           },
-          required: ['id', 'name', 'deviceId', 'createdAt']
+          required: ['id', 'name', 'deviceId', 'autoSubscribe', 'userId', 'createdAt', 'updatedAt']
         },
         CreateTopicRequest: {
           type: 'object',
@@ -369,9 +384,30 @@ const swaggerOptions: swaggerJsdoc.Options = {
               type: 'string',
               example: 'device-1728912345678-ab3cd9ef2',
               description: 'Associated device identifier'
+            },
+            autoSubscribe: {
+              type: 'boolean',
+              example: true,
+              default: false,
+              description: 'Whether to automatically subscribe to this topic'
             }
           },
           required: ['name', 'deviceId']
+        },
+        UpdateTopicRequest: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              example: 'robots/sparky/commands/updated',
+              description: 'Updated MQTT topic name'
+            },
+            autoSubscribe: {
+              type: 'boolean',
+              example: false,
+              description: 'Whether to automatically subscribe to this topic'
+            }
+          }
         },
         PublishTopicRequest: {
           type: 'object',
@@ -402,10 +438,15 @@ const swaggerOptions: swaggerJsdoc.Options = {
               example: { "command": "W", "speed": 200 },
               description: 'Message payload data'
             },
-            topicOwner: {
+            topicId: {
               type: 'string',
               example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
               description: 'Topic ID that owns this message'
+            },
+            userId: {
+              type: 'string',
+              example: 'user-a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+              description: 'User who sent this message'
             },
             createdAt: {
               type: 'string',
@@ -413,7 +454,7 @@ const swaggerOptions: swaggerJsdoc.Options = {
               example: '2024-01-20T10:30:00.000Z'
             }
           },
-          required: ['id', 'payload', 'topicOwner', 'createdAt']
+          required: ['id', 'payload', 'topicId', 'userId', 'createdAt']
         },
         DeviceStatusResponse: {
           allOf: [
