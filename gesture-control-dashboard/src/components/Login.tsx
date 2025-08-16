@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-b
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks';
 import { useTranslation } from 'react-i18next';
+import { authValidation } from '../utils/formValidation';
 
 interface FormErrors {
   email?: string;
@@ -31,25 +32,14 @@ export const Login: React.FC = () => {
     }
   }, [state.isAuthenticated, navigate, location.state]);
 
+  // Pure UI validation using utility
   const validateForm = (): boolean => {
-    const errors: FormErrors = {};
-    
-    // Email validation
-    if (!formData.email.trim()) {
-      errors.email = t('auth.validation.emailRequired');
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = t('auth.validation.emailInvalid');
-    }
-    
-    // Password validation
-    if (!formData.password) {
-      errors.password = t('auth.validation.passwordRequired');
-    } else if (formData.password.length < 6) {
-      errors.password = t('auth.validation.passwordMinLength');
-    }
-    
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+    const errors = authValidation.validateLoginForm(formData.email, formData.password, t);
+    const cleanErrors = Object.fromEntries(
+      Object.entries(errors).filter(([_, value]) => value !== undefined)
+    );
+    setFormErrors(cleanErrors);
+    return Object.keys(cleanErrors).length === 0;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,12 +64,8 @@ export const Login: React.FC = () => {
       return;
     }
     
-    const result = await actions.login(formData.email, formData.password);
-    
-    if (result.success) {
-      const from = (location.state as any)?.from?.pathname || '/dashboard';
-      navigate(from, { replace: true });
-    }
+    const from = (location.state as any)?.from?.pathname || '/dashboard';
+    await actions.handleLoginSubmit(formData.email, formData.password, navigate, from);
   };
 
   return (

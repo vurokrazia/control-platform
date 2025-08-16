@@ -49,7 +49,9 @@ export const useAuth = () => {
       getProfile: authActions.getProfile,
       initialize: authActions.initialize,
       clearError: authActions.clearError,
-      setLoading: authActions.setLoading
+      setLoading: authActions.setLoading,
+      handleLoginSubmit: authActions.handleLoginSubmit,
+      handleRegisterSubmit: authActions.handleRegisterSubmit
     }
   };
 };

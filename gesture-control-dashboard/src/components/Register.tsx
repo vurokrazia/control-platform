@@ -3,6 +3,8 @@ import { Container, Row, Col, Card, Form, Button, Alert, Spinner, ProgressBar } 
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks';
 import { useTranslation } from 'react-i18next';
+import { authValidation } from '../utils/formValidation';
+import { passwordStrength } from '../utils/passwordStrength';
 
 interface FormErrors {
   name?: string;
@@ -34,64 +36,25 @@ export const Register: React.FC = () => {
     }
   }, [state.isAuthenticated, navigate]);
 
-  const getPasswordStrength = (password: string): number => {
-    let strength = 0;
-    
-    if (password.length >= 6) strength += 25;
-    if (password.length >= 8) strength += 25;
-    if (/[A-Z]/.test(password)) strength += 25;
-    if (/[0-9]/.test(password)) strength += 25;
-    
-    return strength;
-  };
+  // Pure UI computed values using utilities
+  const currentPasswordStrength = passwordStrength.calculate(formData.password);
+  const passwordStrengthLabel = t(passwordStrength.getLabel(currentPasswordStrength));
+  const passwordStrengthVariant = passwordStrength.getVariant(currentPasswordStrength);
 
-  const getPasswordStrengthLabel = (strength: number): string => {
-    if (strength < 25) return t('auth.register.passwordStrengthVeryWeak');
-    if (strength < 50) return t('auth.register.passwordStrengthWeak');
-    if (strength < 75) return t('auth.register.passwordStrengthGood');
-    return t('auth.register.passwordStrengthStrong');
-  };
-
-  const getPasswordStrengthVariant = (strength: number): string => {
-    if (strength < 25) return 'danger';
-    if (strength < 50) return 'warning';
-    if (strength < 75) return 'info';
-    return 'success';
-  };
-
+  // Pure UI validation using utility
   const validateForm = (): boolean => {
-    const errors: FormErrors = {};
-    
-    // Name validation
-    if (!formData.name.trim()) {
-      errors.name = t('auth.validation.nameRequired');
-    } else if (formData.name.trim().length < 2) {
-      errors.name = t('auth.validation.nameMinLength');
-    }
-    
-    // Email validation
-    if (!formData.email.trim()) {
-      errors.email = t('auth.validation.emailRequired');
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = t('auth.validation.emailInvalid');
-    }
-    
-    // Password validation
-    if (!formData.password) {
-      errors.password = t('auth.validation.passwordRequired');
-    } else if (formData.password.length < 6) {
-      errors.password = t('auth.validation.passwordMinLength');
-    }
-    
-    // Confirm password validation
-    if (!formData.confirmPassword) {
-      errors.confirmPassword = t('auth.validation.confirmPasswordRequired');
-    } else if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = t('auth.validation.passwordMismatch');
-    }
-    
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+    const errors = authValidation.validateRegisterForm(
+      formData.name, 
+      formData.email, 
+      formData.password, 
+      formData.confirmPassword, 
+      t
+    );
+    const cleanErrors = Object.fromEntries(
+      Object.entries(errors).filter(([_, value]) => value !== undefined)
+    );
+    setFormErrors(cleanErrors);
+    return Object.keys(cleanErrors).length === 0;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,14 +79,10 @@ export const Register: React.FC = () => {
       return;
     }
     
-    const result = await actions.register(formData.name.trim(), formData.email, formData.password);
-    
-    if (result.success) {
-      navigate('/dashboard', { replace: true });
-    }
+    await actions.handleRegisterSubmit(formData.name.trim(), formData.email, formData.password, navigate);
   };
 
-  const passwordStrength = getPasswordStrength(formData.password);
+  // Remove - already computed above
 
   return (
     <Container fluid className="min-vh-100 d-flex align-items-center justify-content-center bg-light py-4">
@@ -202,13 +161,13 @@ export const Register: React.FC = () => {
                     <div className="mt-2">
                       <div className="d-flex justify-content-between small mb-1">
                         <span>{t('auth.register.passwordStrength')}</span>
-                        <span className={`fw-bold text-${getPasswordStrengthVariant(passwordStrength)}`}>
-                          {getPasswordStrengthLabel(passwordStrength)}
+                        <span className={`fw-bold text-${passwordStrengthVariant}`}>
+                          {passwordStrengthLabel}
                         </span>
                       </div>
                       <ProgressBar 
-                        variant={getPasswordStrengthVariant(passwordStrength)}
-                        now={passwordStrength} 
+                        variant={passwordStrengthVariant}
+                        now={currentPasswordStrength} 
                         style={{ height: '4px' }}
                       />
                     </div>

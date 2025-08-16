@@ -255,5 +255,32 @@ export const authActions = {
   setLoading(loading: boolean): ActionResult<void> {
     useAuthStore.setState({ isLoading: loading });
     return { success: true };
+  },
+
+  /**
+   * Handle login form submission with navigation
+   */
+  async handleLoginSubmit(email: string, password: string, navigate: (path: string, options?: any) => void, redirectPath?: string): Promise<ActionResult<void>> {
+    const result = await authActions.login(email, password);
+    
+    if (result.success) {
+      const targetPath = redirectPath || '/dashboard';
+      navigate(targetPath, { replace: true });
+    }
+    
+    return result;
+  },
+
+  /**
+   * Handle register form submission with navigation
+   */
+  async handleRegisterSubmit(name: string, email: string, password: string, navigate: (path: string, options?: any) => void): Promise<ActionResult<void>> {
+    const result = await authActions.register(name, email, password);
+    
+    if (result.success) {
+      navigate('/dashboard', { replace: true });
+    }
+    
+    return result;
   }
 };
