@@ -176,6 +176,7 @@ export const authActions = {
    * Get current user profile
    */
   async getProfile(): Promise<ActionResult<User>> {
+    console.log(`🔥 AUTH ACTIONS - getProfile() called from authActions`);
     const { token } = useAuthStore.getState();
     if (!token) {
       return { success: false, error: 'No auth token found' };
@@ -186,7 +187,7 @@ export const authActions = {
     setGlobalLoading(true);
     
     try {
-      const result = await authRepository.getProfile();
+      const result = await authRepository.getProfile('AUTH_ACTIONS');
       
       if (result.success && result.user) {
         // Set language from user preference

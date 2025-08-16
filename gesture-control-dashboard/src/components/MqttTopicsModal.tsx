@@ -27,16 +27,16 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
   // Load devices when modal opens
   useEffect(() => {
     if (isOpen) {
-      devices.actions.loadAllDevices();
+      void devices.actions.loadAllDevices();
     }
   }, [isOpen]);
 
   // Load topics when device changes
   useEffect(() => {
     if (isOpen && devices.state.selectedDevice) {
-      topics.actions.loadTopicsByDevice(devices.state.selectedDevice.deviceId);
+      void topics.actions.loadTopicsByDevice(devices.state.selectedDevice.deviceId);
     }
-  }, [isOpen, devices.state.selectedDevice]);
+  }, [isOpen, devices.state.selectedDevice?.deviceId]);
 
   // Pure UI event handlers - no business logic
   const handleCreateTopic = async (e: React.FormEvent) => {
@@ -72,6 +72,14 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
   const handleDeviceCreated = (newDevice: any) => {
     devices.actions.setSelectedDevice(newDevice);
     setShowDeviceModal(false);
+  };
+
+  const confirmDelete = (topicId: string) => {
+    setDeleteConfirmation(topicId);
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirmation(null);
   };
 
   return (
@@ -124,17 +132,17 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
                   value={newTopicName}
                   onChange={(e) => setNewTopicName(e.target.value)}
                   placeholder={t('mqtt.topics.topicName')}
-                  disabled={topics.state.topics.state.loading.topics.creating}
+                  disabled={topics.state.loading.creating}
                 />
                 <Button
                   type="submit"
                   variant="primary"
-                  disabled={topics.state.topics.state.loading.topics.creating || !newTopicName.trim()}
+                  disabled={topics.state.loading.creating || !newTopicName.trim()}
                 >
-                  {topics.state.topics.state.loading.topics.creating ? (
+                  {topics.state.loading.creating ? (
                     <>
                       <Spinner size="sm" className="me-2" />
-                      {t('common.topics.state.loading.topics')}
+                      {t('common.loading')}
                     </>
                   ) : (
                     t('mqtt.topics.addTopic')
@@ -152,30 +160,30 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
               />
               
               <Form.Text className="text-muted">
-                {t('mqtt.modal.helpText')}: {devices.state.selectedDevice?.deviceId || ''}
+                {t('mqtt.modal.helpText')}: {devices.state.selectedDevice?.name || devices.state.selectedDevice?.deviceId}
               </Form.Text>
             </Form>
           )}
 
           {/* Message when no device selected */}
-          {!devices.state.selectedDevice?.deviceId || '' && (
+          {!devices.state.selectedDevice && (
             <Alert variant="info" className="mb-4">
               <strong>{t('mqtt.modal.selectDevice')}</strong>
             </Alert>
           )}
 
           {/* Topics list - Only show if device is selected */}
-          {devices.state.selectedDevice?.deviceId || '' && (
+          {devices.state.selectedDevice && (
             <>
               <h6 className="fw-bold mb-3">
-                {t('mqtt.topics.title')} {devices.state.selectedDevice?.deviceId || ''}
+                {t('mqtt.topics.title')} {devices.state.selectedDevice?.name || devices.state.selectedDevice?.deviceId}
               </h6>
               {topics.state.loading.topics ? (
                 <div className="text-center py-4">
                   <Spinner animation="border" role="status">
                     <span className="visually-hidden">Loading topics...</span>
                   </Spinner>
-                  <div className="mt-2">{t('common.topics.state.loading.topics')}</div>
+                  <div className="mt-2">{t('common.loading')}</div>
                 </div>
               ) : topics.state.topics.length === 0 ? (
                 <Alert variant="info" className="text-center">

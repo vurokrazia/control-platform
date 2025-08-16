@@ -141,13 +141,14 @@ export const useAuthStore = create<AuthState>()(
       },
 
       getProfile: async (): Promise<void> => {
+        console.log(`🔥 AUTH STORE - getProfile() called from authStore`);
         const { token } = get();
         if (!token) return;
 
         set({ isLoading: true });
         
         try {
-          const result = await authRepository.getProfile();
+          const result = await authRepository.getProfile('AUTH_STORE');
           
           if (result.success && result.user) {
             // Set language from user preference
@@ -174,12 +175,14 @@ export const useAuthStore = create<AuthState>()(
       setLoading: (loading: boolean) => set({ isLoading: loading }),
 
       initialize: async (): Promise<void> => {
+        console.log(`🔥 AUTH STORE - initialize() called from authStore`);
         const token = localStorage.getItem('auth_token');
         
         if (token) {
           set({ token });
           
           // Validate token and get user profile (includes language preference)
+          console.log(`🔥 AUTH STORE - initialize() calling getProfile()`);
           await get().getProfile();
         } else {
           // For non-authenticated users, try to get language preference if they have a stored token

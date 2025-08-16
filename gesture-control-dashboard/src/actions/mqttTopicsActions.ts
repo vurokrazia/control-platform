@@ -51,20 +51,15 @@ export const mqttTopicsActions = {
     }
 
     const { setTopicsLoading } = useUiStore.getState();
-    const { clearError } = useMqttTopicsStore.getState();
     
     setTopicsLoading(true);
-    clearError();
+    useMqttTopicsStore.setState({ error: null });
     
     try {
       const topics = await mqttTopicsRepository.getDeviceTopics(deviceId);
       
-      // Update store - replace topics for this device
-      const { topics: currentTopics } = useMqttTopicsStore.getState();
-      const otherTopics = currentTopics.filter(t => t.deviceId !== deviceId);
-      const updatedTopics = [...otherTopics, ...topics];
-      
-      useMqttTopicsStore.setState({ topics: updatedTopics });
+      // Simple state update - just replace all topics
+      useMqttTopicsStore.setState({ topics });
       
       setTopicsLoading(false);
       return { success: true, data: topics };

@@ -74,13 +74,16 @@ export class AuthRepository {
     }
   }
 
-  async getProfile(): Promise<AuthResponse> {
+  async getProfile(caller?: string): Promise<AuthResponse> {
+    console.log(`🔥 AUTH API CALL - getProfile() called by: ${caller || 'UNKNOWN'}`);
     try {
       const token = localStorage.getItem('auth_token');
       if (!token) {
+        console.log(`🔥 AUTH API - No token found (called by: ${caller || 'UNKNOWN'})`);
         return { success: false, error: 'No token found' };
       }
 
+      console.log(`🔥 AUTH API - Making request to ${this.baseURL}/me (called by: ${caller || 'UNKNOWN'})`);
       const response = await axios.get(`${this.baseURL}/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
