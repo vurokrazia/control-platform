@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore';
 import './i18n';
@@ -16,11 +16,18 @@ import './App.css';
 
 const App: React.FC = () => {
   const { initialize } = useAuthStore();
+  const hasInitialized = useRef(false);
 
-  // Initialize auth state from localStorage on app start
+  // Initialize auth state from localStorage on app start - ONLY ONCE
   useEffect(() => {
-    initialize();
-  }, [initialize]);
+    if (!hasInitialized.current) {
+      console.log(`🔥 APP.TSX - useEffect calling initialize() - FIRST TIME ONLY`);
+      hasInitialized.current = true;
+      initialize();
+    } else {
+      console.log(`🔥 APP.TSX - useEffect blocked duplicate initialize() call`);
+    }
+  }, []); // Empty dependency array - only run once on mount
 
   return (
     <Router>

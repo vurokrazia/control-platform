@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Spinner, Container } from 'react-bootstrap';
 import { useAuthStore } from '../stores/authStore';
@@ -9,12 +9,9 @@ interface PrivateRouteProps {
 
 export const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   const location = useLocation();
-  const { isAuthenticated, isLoading, initialize } = useAuthStore();
+  const { isAuthenticated, isLoading } = useAuthStore();
 
-  // Initialize auth state from storage on mount
-  useEffect(() => {
-    initialize();
-  }, [initialize]);
+  // No initialization here - App.tsx handles it once
 
   // Show loading spinner while checking authentication
   if (isLoading) {
