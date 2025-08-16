@@ -1,16 +1,11 @@
 // Jest setup file
 import { config } from 'dotenv';
 
-// Load test environment variables
+// Load test environment variables from .env.test file
 config({ path: '.env.test' });
 
-// Set test environment
-process.env.NODE_ENV = 'test';
-process.env.JWT_SECRET = 'test-jwt-secret-key';
-process.env.MONGODB_URI = 'mongodb://test-user:test-pass@test-db-host:27017/arduino-api-test';
-process.env.DISABLE_DATABASE = 'true';
-process.env.DISABLE_MQTT = 'true';
-process.env.DISABLE_REDIS = 'true';
+// The environment variables are now loaded from .env.test
+// No need to override them manually
 
 // Mock mongoose to prevent actual DB connections
 jest.mock('mongoose', () => ({
