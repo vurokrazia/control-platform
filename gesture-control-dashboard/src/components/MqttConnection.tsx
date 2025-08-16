@@ -151,7 +151,7 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
         {devices.state.selectedDevice && (
           <Form.Group className="mb-3">
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <Form.Label className="fw-bold mb-0">{t('mqtt.topics.addTopic')}:</Form.Label>
+              <Form.Label className="fw-bold mb-0">{t('mqtt.topics.title')}:</Form.Label>
               <Button
                 variant="outline-secondary"
                 size="sm"
@@ -182,7 +182,7 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
                 <option>{t('mqtt.topics.noTopics')}</option>
               ) : (
                 <>
-                  <option value="">{t('mqtt.topics.addTopic')}</option>
+                  <option value="">{t('mqtt.connection.selectTopic')}</option>
                   {topics.state.topics.map((topic) => (
                     <option key={topic.id || topic.name} value={topic.name}>
                       {topic.name} {topic.autoSubscribe ? '📡' : '⚠️'}
@@ -192,7 +192,7 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
               )}
             </Form.Select>
             <Form.Text className="text-muted">
-              {t('mqtt.topics.title')}
+              {t('mqtt.connection.selectTopicHelp')}
             </Form.Text>
           </Form.Group>
         )}

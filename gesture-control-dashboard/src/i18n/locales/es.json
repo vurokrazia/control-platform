@@ -81,7 +81,7 @@
   },
   "mqtt": {
     "connection": {
-      "title": "Conexión MQTT",
+      "title": "Monitor de Mensajes MQTT",
       "broker": "Broker MQTT",
       "port": "Puerto",
       "username": "Usuario",
@@ -92,7 +92,9 @@
       "connecting": "Conectando...",
       "connected": "Conectado",
       "disconnected": "Desconectado",
-      "error": "Error de Conexión"
+      "error": "Error de Conexión",
+      "selectTopic": "Seleccionar Tema para Monitorear",
+      "selectTopicHelp": "Elige un tema para ver su historial de mensajes"
     },
     "topics": {
       "title": "Temas MQTT",
@@ -116,7 +118,7 @@
       }
     },
     "modal": {
-      "title": "Configurar Temas MQTT",
+      "title": "Gestión de Temas MQTT",
       "deviceSelection": "Selección de Dispositivo",
       "selectDevice": "Seleccionar Dispositivo",
       "newDevice": "Nuevo Dispositivo",
