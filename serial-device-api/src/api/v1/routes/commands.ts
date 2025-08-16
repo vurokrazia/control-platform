@@ -1,12 +1,16 @@
 import express from 'express';
 import { CommandsController } from '../controllers/CommandsController';
 import { versionMiddleware } from '../middleware/versionMiddleware';
+import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = express.Router({ mergeParams: true });
 const commandsController = new CommandsController();
 
 // Apply version middleware
 router.use(versionMiddleware);
+
+// Apply authentication middleware
+router.use(authMiddleware.requireAuth);
 
 /**
  * @swagger

@@ -25,8 +25,19 @@ export class MqttService {
             connectTimeout: 30 * 1000
         });
 
-        this.client.on('connect', () => {
+        this.client.on('connect', async () => {
             console.log('✅ Connected to MQTT broker');
+            
+            // Auto-subscribe to topics that have autoSubscribe = true
+            try {
+                const autoSubscribeTopics = await this.mqttTopicRepository.findAutoSubscribeTopics();
+                autoSubscribeTopics.forEach(topic => {
+                    this.subscribe(topic.name);
+                    console.log(`🔄 Auto-subscribed to topic: ${topic.name}`);
+                });
+            } catch (error) {
+                console.error('❌ Error auto-subscribing to topics:', error);
+            }
         });
 
         this.client.on('error', (error) => {

@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 export interface User {
   id: string;
   email: string;
+  username: string;
   password: string;
   name: string;
   isActive: boolean;
@@ -16,6 +17,7 @@ export interface User {
 export class UserEntity implements User {
   public readonly id: string;
   public email: string;
+  public username: string;
   public password: string;
   public name: string;
   public isActive: boolean;
@@ -30,6 +32,7 @@ export class UserEntity implements User {
     password: string,
     name: string,
     id?: string,
+    username?: string,
     isActive: boolean = true,
     emailVerified: boolean = false,
     language: string = 'en',
@@ -39,6 +42,7 @@ export class UserEntity implements User {
   ) {
     this.id = id || uuidv4();
     this.email = email.toLowerCase().trim();
+    this.username = username || 'user_' + Math.random().toString(36).substring(2, 15);
     this.password = password;
     this.name = name.trim();
     this.isActive = isActive;

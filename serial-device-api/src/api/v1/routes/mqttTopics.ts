@@ -254,6 +254,7 @@ router.use(authMiddleware.requireAuth);
 router.get('/', mqttTopicController.getAllTopics.bind(mqttTopicController));
 router.post('/', mqttTopicController.createTopic.bind(mqttTopicController));
 router.post('/publish', mqttTopicController.publishMessage.bind(mqttTopicController));
+router.put('/:id', mqttTopicController.updateTopic.bind(mqttTopicController));
 router.delete('/:id', mqttTopicController.deleteTopic.bind(mqttTopicController));
 
 export default router;

@@ -1,12 +1,16 @@
 import express from 'express';
 import { DevicesController } from '../controllers/DevicesController';
 import { versionMiddleware } from '../middleware/versionMiddleware';
+import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = express.Router();
 const devicesController = new DevicesController();
 
 // Apply version middleware
 router.use(versionMiddleware);
+
+// Apply authentication middleware
+router.use(authMiddleware.requireAuth);
 
 /**
  * @swagger

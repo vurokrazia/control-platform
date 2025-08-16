@@ -7,23 +7,24 @@ import serialPortsRoutes from './routes/serialPorts';
 import mqttTopicsRoutes from './routes/mqttTopics';
 import topicMessagesRoutes from './routes/topicMessages';
 import authRoutes from './routes/auth';
+import { authMiddleware } from './middleware/authMiddleware';
 
 const router = express.Router();
 
 // Authentication routes (public access)
 router.use('/auth', authRoutes);
 
-// Mount RESTful resource routes
-router.use('/devices', devicesRoutes);
-router.use('/devices/:deviceId/data', deviceDataRoutes);
-router.use('/devices/:deviceId/commands', commandsRoutes);
-router.use('/devices/:deviceId/sessions', sessionsRoutes);
-router.use('/serial-ports', serialPortsRoutes);
-router.use('/mqtt-topics', mqttTopicsRoutes);
-router.use('/topics/:topicId/topicMessages', topicMessagesRoutes);
+// All routes require authentication except auth routes
+router.use('/devices', authMiddleware.requireAuth, devicesRoutes);
+router.use('/devices/:deviceId/data', authMiddleware.requireAuth, deviceDataRoutes);
+router.use('/devices/:deviceId/commands', authMiddleware.requireAuth, commandsRoutes);
+router.use('/devices/:deviceId/sessions', authMiddleware.requireAuth, sessionsRoutes);
+router.use('/serial-ports', authMiddleware.requireAuth, serialPortsRoutes);
+router.use('/mqtt-topics', authMiddleware.requireAuth, mqttTopicsRoutes);
+router.use('/topics/:topicId/topicMessages', authMiddleware.requireAuth, topicMessagesRoutes);
 
-// V1 API info endpoint
-router.get('/', (_req, res) => {
+// V1 API info endpoint - also requires authentication
+router.get('/', authMiddleware.requireAuth, (_req, res) => {
   res.json({
     version: '1.0.0',
     namespace: 'v1',

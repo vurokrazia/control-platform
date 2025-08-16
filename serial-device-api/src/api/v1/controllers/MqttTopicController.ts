@@ -43,7 +43,7 @@ export class MqttTopicController {
 
   public async createTopic(req: Request, res: Response): Promise<void> {
     try {
-      const { name, deviceId } = req.body;
+      const { name, deviceId, autoSubscribe = true } = req.body;
       const user = req.user;
       const userId = req.userId;
       
@@ -66,11 +66,13 @@ export class MqttTopicController {
       }
 
       // Create topic with user ownership
-      const newTopic = new MqttTopic(name, deviceId, userId);
+      const newTopic = new MqttTopic(name, deviceId, userId, autoSubscribe);
       const createdTopic = await this.mqttTopicRepository.create(newTopic);
       
-      // Subscribe to the new topic
-      mqttServiceInstance.subscribe(name);
+      // Subscribe to the new topic only if autoSubscribe is true
+      if (autoSubscribe) {
+        mqttServiceInstance.subscribe(name);
+      }
       
       res.status(201).json({ 
         success: true, 
@@ -82,6 +84,68 @@ export class MqttTopicController {
       } else {
         res.status(500).json({ success: false, error: 'Internal server error' });
       }
+    }
+  }
+
+  public async updateTopic(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { autoSubscribe } = req.body;
+      const user = req.user;
+      const userId = req.userId;
+      
+      if (!user || !userId) {
+        res.status(401).json({ 
+          success: false, 
+          error: 'Unauthorized - User not authenticated or invalid token' 
+        });
+        return;
+      }
+
+      if (typeof autoSubscribe !== 'boolean') {
+        res.status(400).json({ success: false, error: 'autoSubscribe must be a boolean' });
+        return;
+      }
+      
+      // Find topic by ID for the authenticated user only
+      const userTopics = await this.mqttTopicRepository.findByUserId(userId);
+      const topicEntity = userTopics.find(t => t.id === id);
+      
+      if (!topicEntity) {
+        res.status(404).json({ success: false, error: 'Topic not found or access denied' });
+        return;
+      }
+
+      // Create updated topic
+      const updatedTopic = new MqttTopic(
+        topicEntity.name, 
+        topicEntity.deviceId, 
+        topicEntity.userId, 
+        autoSubscribe,
+        topicEntity.id,
+        topicEntity.createdAt
+      );
+      
+      // Save changes (this would need a proper update method in repository)
+      // For now, we'll delete and recreate
+      await this.mqttTopicRepository.deleteByNameAndUserId(topicEntity.name, userId);
+      const result = await this.mqttTopicRepository.create(updatedTopic);
+      
+      // Handle subscription changes
+      if (autoSubscribe && !topicEntity.autoSubscribe) {
+        // Topic now needs subscription
+        mqttServiceInstance.subscribe(topicEntity.name);
+      } else if (!autoSubscribe && topicEntity.autoSubscribe) {
+        // Topic no longer needs subscription
+        mqttServiceInstance.unsubscribe(topicEntity.name);
+      }
+      
+      res.status(200).json({ 
+        success: true, 
+        data: result
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: 'Internal server error' });
     }
   }
 
@@ -172,12 +236,20 @@ export class MqttTopicController {
         return;
       }
 
-      // Publish message to MQTT topic with userId in payload
+      // Publish message to MQTT topic with userId in payload first
       const mqttPayload = JSON.stringify({ message: message, userId: userId });
-      mqttServiceInstance.publish(topic, mqttPayload);
       
-      // Message will be saved by MQTT service when it receives from broker
-      // This prevents duplicate saving
+      try {
+        mqttServiceInstance.publish(topic, mqttPayload);
+        
+        // Only save to database after successful MQTT publish
+        const topicMessage = new TopicMessage(message, topicEntity.id, userId);
+        await this.topicMessageRepository.create(topicMessage);
+      } catch (mqttError) {
+        console.error('Failed to publish to MQTT:', mqttError);
+        res.status(500).json({ success: false, error: 'Failed to publish message to MQTT topic' });
+        return;
+      }
       
       res.status(200).json({ 
         success: true, 

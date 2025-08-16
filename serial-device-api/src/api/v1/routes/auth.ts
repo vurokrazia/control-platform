@@ -35,6 +35,17 @@ const authController = new AuthController();
  *           example: John Doe
  *           description: User's full name
  *     
+ *     UpdateLanguageRequest:
+ *       type: object
+ *       required:
+ *         - language
+ *       properties:
+ *         language:
+ *           type: string
+ *           enum: [en, es]
+ *           example: en
+ *           description: Language preference (en for English, es for Spanish)
+ *     
  *     LoginRequest:
  *       type: object
  *       required:

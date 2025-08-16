@@ -7,4 +7,5 @@ export interface IMqttTopicRepository {
   create(topic: MqttTopic): Promise<MqttTopic>;
   deleteByName(name: string): Promise<boolean>;
   deleteByNameAndUserId(name: string, userId: string): Promise<boolean>;
+  findAutoSubscribeTopics(): Promise<MqttTopic[]>;
 }

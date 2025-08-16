@@ -10,6 +10,7 @@ export class MqttTopicRepository implements IMqttTopicRepository {
       topic.name,
       topic.deviceId,
       topic.userId,
+      topic.autoSubscribe,
       topic._id?.toString(),
       topic.createdAt
     ));
@@ -21,6 +22,7 @@ export class MqttTopicRepository implements IMqttTopicRepository {
       topic.name,
       topic.deviceId,
       topic.userId,
+      topic.autoSubscribe,
       topic._id?.toString(),
       topic.createdAt
     ));
@@ -34,6 +36,7 @@ export class MqttTopicRepository implements IMqttTopicRepository {
       topic.name,
       topic.deviceId,
       topic.userId,
+      topic.autoSubscribe,
       topic._id?.toString(),
       topic.createdAt
     );
@@ -44,7 +47,8 @@ export class MqttTopicRepository implements IMqttTopicRepository {
       _id: topic.id,
       name: topic.name,
       deviceId: topic.deviceId,
-      userId: topic.userId
+      userId: topic.userId,
+      autoSubscribe: topic.autoSubscribe
     });
     const savedTopic = await newTopic.save();
     
@@ -52,6 +56,7 @@ export class MqttTopicRepository implements IMqttTopicRepository {
       savedTopic.name,
       savedTopic.deviceId,
       savedTopic.userId,
+      savedTopic.autoSubscribe,
       savedTopic._id?.toString(),
       savedTopic.createdAt
     );
@@ -65,5 +70,17 @@ export class MqttTopicRepository implements IMqttTopicRepository {
   async deleteByNameAndUserId(name: string, userId: string): Promise<boolean> {
     const result = await MqttTopicModel.findOneAndDelete({ name, userId });
     return result !== null;
+  }
+
+  async findAutoSubscribeTopics(): Promise<MqttTopic[]> {
+    const topics = await MqttTopicModel.find({ autoSubscribe: true }).sort({ createdAt: -1 });
+    return topics.map(topic => new MqttTopic(
+      topic.name,
+      topic.deviceId,
+      topic.userId,
+      topic.autoSubscribe,
+      topic._id?.toString(),
+      topic.createdAt
+    ));
   }
 }

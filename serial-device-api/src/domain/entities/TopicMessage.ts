@@ -4,12 +4,14 @@ export class TopicMessage {
   public readonly id: string;
   public readonly payload: string;
   public readonly topicOwner: string;
+  public readonly userId: string;
   public readonly createdAt: Date;
 
-  constructor(payload: string, topicOwner: string, id?: string, createdAt?: Date) {
+  constructor(payload: string, topicOwner: string, userId: string, id?: string, createdAt?: Date) {
     this.id = id || uuidv4();
     this.payload = payload;
     this.topicOwner = topicOwner;
+    this.userId = userId;
     this.createdAt = createdAt || new Date();
   }
 }

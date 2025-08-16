@@ -5,6 +5,7 @@ export interface IUserDocument extends Document {
   _id: string;
   id: string;
   email: string;
+  username: string;
   password: string;
   name: string;
   isActive: boolean;
@@ -31,6 +32,12 @@ const UserSchema = new Schema<IUserDocument>({
     required: true,
     unique: true,
     lowercase: true,
+    trim: true
+  },
+  username: {
+    type: String,
+    required: true,
+    unique: true,
     trim: true
   },
   password: {
@@ -81,6 +88,11 @@ UserSchema.pre<IUserDocument>('save', async function(next) {
     // Set _id to be the same as id for consistency
     if (!this._id) {
       this._id = this.id;
+    }
+    
+    // Generate random username if not set
+    if (!this.username) {
+      this.username = 'user_' + Math.random().toString(36).substring(2, 15);
     }
     
     next();

@@ -14,18 +14,29 @@ export class TopicMessageController {
   public async getMessagesByTopicId(req: Request, res: Response): Promise<void> {
     try {
       const { topicId } = req.params;
+      const user = req.user;
+      const userId = req.userId;
       
-      // Verify topic exists
-      const topics = await this.mqttTopicRepository.findAll();
-      const topicEntity = topics.find(t => t.id === topicId);
+      if (!user || !userId) {
+        res.status(401).json({ 
+          success: false, 
+          error: 'Unauthorized - User not authenticated or invalid token' 
+        });
+        return;
+      }
       
+      // Verify topic exists and belongs to user
+      const userTopics = await this.mqttTopicRepository.findByUserId(userId);
+      const topicEntity = userTopics.find(t => t.id === topicId);
+
       if (!topicEntity) {
-        res.status(404).json({ success: false, error: 'Topic not found' });
+        console.log('Topic not found or access denied');
+        res.status(404).json({ success: false, error: 'Topic not found or access denied' });
         return;
       }
 
-      // Get messages for this topic
-      const messages = await this.topicMessageRepository.findByTopicOwner(topicId);
+      // Get messages for this topic and user only
+      const messages = await this.topicMessageRepository.findByTopicOwnerAndUserId(topicId, userId);
       
       res.status(200).json({ 
         success: true, 

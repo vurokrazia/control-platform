@@ -8,13 +8,15 @@ export class TopicMessageRepository implements ITopicMessageRepository {
     const newMessage = new TopicMessageModel({
       _id: message.id,
       payload: message.payload,
-      topicOwner: message.topicOwner
+      topicOwner: message.topicOwner,
+      userId: message.userId
     });
     const savedMessage = await newMessage.save();
     
     return new TopicMessage(
       savedMessage.payload,
       savedMessage.topicOwner,
+      savedMessage.userId,
       savedMessage._id?.toString(),
       savedMessage.createdAt
     );
@@ -25,6 +27,30 @@ export class TopicMessageRepository implements ITopicMessageRepository {
     return messages.map(msg => new TopicMessage(
       msg.payload,
       msg.topicOwner,
+      msg.userId,
+      msg._id?.toString(),
+      msg.createdAt
+    ));
+  }
+
+  async findByTopicOwnerAndUserId(topicOwner: string, userId: string): Promise<TopicMessage[]> {
+    console.log( topicOwner, userId);
+    const messages = await TopicMessageModel.find({ topicOwner }).sort({ createdAt: -1 });
+    return messages.map(msg => new TopicMessage(
+      msg.payload,
+      msg.topicOwner,
+      msg.userId,
+      msg._id?.toString(),
+      msg.createdAt
+    ));
+  }
+
+  async findByUserId(userId: string): Promise<TopicMessage[]> {
+    const messages = await TopicMessageModel.find({ userId }).sort({ createdAt: -1 });
+    return messages.map(msg => new TopicMessage(
+      msg.payload,
+      msg.topicOwner,
+      msg.userId,
       msg._id?.toString(),
       msg.createdAt
     ));
@@ -32,5 +58,9 @@ export class TopicMessageRepository implements ITopicMessageRepository {
 
   async countByTopicOwner(topicOwner: string): Promise<number> {
     return await TopicMessageModel.countDocuments({ topicOwner });
+  }
+
+  async countByTopicOwnerAndUserId(topicOwner: string, userId: string): Promise<number> {
+    return await TopicMessageModel.countDocuments({ topicOwner, userId });
   }
 }
