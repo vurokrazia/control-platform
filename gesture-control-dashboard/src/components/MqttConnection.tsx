@@ -185,7 +185,7 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
                   <option value="">{t('mqtt.topics.addTopic')}</option>
                   {topics.state.topics.map((topic) => (
                     <option key={topic.id || topic.name} value={topic.name}>
-                      {topic.name}
+                      {topic.name} {topic.autoSubscribe ? '📡' : '⚠️'}
                     </option>
                   ))}
                 </>
@@ -205,8 +205,42 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
                   <strong>{t('devices.title')}:</strong> {devices.state.selectedDevice.name} ({devices.state.selectedDevice.deviceId})
                   <br />
                   <strong>{t('mqtt.topics.title')}:</strong> {selectedTopicData.name}
-                  <br />
-                  <small>{t('common.refresh')} {topicMessages.state.refreshInterval}s</small>
+                  <div className="mt-2 d-flex align-items-center gap-2">
+                    <span className={`badge ${selectedTopicData.autoSubscribe ? 'bg-success' : 'bg-warning text-dark'}`}>
+                      {selectedTopicData.autoSubscribe ? `📡 ${t('mqtt.topics.subscriptionStatus.auto')}` : `⚠️ ${t('mqtt.topics.subscriptionStatus.manual')}`}
+                    </span>
+                    <Button
+                      variant={selectedTopicData.autoSubscribe ? "outline-warning" : "outline-success"}
+                      size="sm"
+                      onClick={async () => {
+                        if (selectedTopicData.id) {
+                          const result = await topics.actions.updateTopic(selectedTopicData.id, !selectedTopicData.autoSubscribe);
+                          if (result.success) {
+                            // Update local state to reflect the change
+                            setSelectedTopicData({ ...selectedTopicData, autoSubscribe: !selectedTopicData.autoSubscribe });
+                            // Reload topics to sync with server
+                            if (devices.state.selectedDevice) {
+                              void topics.actions.loadTopicsByDevice(devices.state.selectedDevice.deviceId);
+                            }
+                          }
+                        }
+                      }}
+                      disabled={topics.state.loading.updating}
+                      title={selectedTopicData.autoSubscribe ? 'Disable auto-subscribe' : 'Enable auto-subscribe'}
+                    >
+                      {topics.state.loading.updating ? (
+                        <>
+                          <Spinner size="sm" className="me-1" />
+                          {t('common.loading')}
+                        </>
+                      ) : selectedTopicData.autoSubscribe ? (
+                        <>🔕 {t('mqtt.topics.unsubscribe')}</>
+                      ) : (
+                        <>📡 {t('mqtt.topics.subscribe')}</>
+                      )}
+                    </Button>
+                  </div>
+                  <small className="text-muted">{t('common.refresh')} {topicMessages.state.refreshInterval}s</small>
                 </div>
                 <div style={{ minWidth: '140px' }}>
                   <Form.Label className="fw-bold small mb-1 d-block">{t('common.refresh')}:</Form.Label>

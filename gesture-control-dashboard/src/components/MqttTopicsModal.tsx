@@ -242,14 +242,35 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
                         </div>
                         <div className="d-flex gap-2">
                           {!isEditing && (
-                            <Button
-                              variant="outline-primary"
-                              size="sm"
-                              onClick={() => setEditingTopic(topic)}
-                              title="Edit subscription settings"
-                            >
-                              ⚙️
-                            </Button>
+                            <>
+                              <Button
+                                variant={topic.autoSubscribe ? "outline-warning" : "outline-success"}
+                                size="sm"
+                                onClick={async () => {
+                                  if (topic.id) {
+                                    await topics.actions.updateTopic(topic.id, !topic.autoSubscribe);
+                                  }
+                                }}
+                                disabled={topics.state.loading.updating}
+                                title={topic.autoSubscribe ? 'Disable auto-subscribe' : 'Enable auto-subscribe'}
+                              >
+                                {topics.state.loading.updating ? (
+                                  <Spinner size="sm" />
+                                ) : topic.autoSubscribe ? (
+                                  '🔕'
+                                ) : (
+                                  '📡'
+                                )}
+                              </Button>
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                onClick={() => setEditingTopic(topic)}
+                                title="Edit subscription settings"
+                              >
+                                ⚙️
+                              </Button>
+                            </>
                           )}
                           <Button
                             variant="outline-danger"
