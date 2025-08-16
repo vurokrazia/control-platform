@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuthStore } from '../stores/authStore';
+import { useAuth } from '../hooks';
 import { useTranslation } from 'react-i18next';
 
 interface FormErrors {
@@ -12,7 +12,7 @@ interface FormErrors {
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isLoading, error, clearError, isAuthenticated } = useAuthStore();
+  const { state, actions } = useAuth();
   const { t } = useTranslation();
   
   const [formData, setFormData] = useState({
@@ -25,11 +25,11 @@ export const Login: React.FC = () => {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
+    if (state.isAuthenticated) {
       const from = (location.state as any)?.from?.pathname || '/dashboard';
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate, location.state]);
+  }, [state.isAuthenticated, navigate, location.state]);
 
   const validateForm = (): boolean => {
     const errors: FormErrors = {};
@@ -62,8 +62,8 @@ export const Login: React.FC = () => {
     }
     
     // Clear global error
-    if (error) {
-      clearError();
+    if (state.error) {
+      actions.clearError();
     }
   };
 
@@ -74,9 +74,9 @@ export const Login: React.FC = () => {
       return;
     }
     
-    const success = await login(formData.email, formData.password);
+    const result = await actions.login(formData.email, formData.password);
     
-    if (success) {
+    if (result.success) {
       const from = (location.state as any)?.from?.pathname || '/dashboard';
       navigate(from, { replace: true });
     }
@@ -93,9 +93,9 @@ export const Login: React.FC = () => {
             </Card.Header>
             
             <Card.Body className="p-4">
-              {error && (
-                <Alert variant="danger" dismissible onClose={clearError}>
-                  {error}
+              {state.error && (
+                <Alert variant="danger" dismissible onClose={actions.clearError}>
+                  {state.error}
                 </Alert>
               )}
               
@@ -109,7 +109,7 @@ export const Login: React.FC = () => {
                     onChange={handleInputChange}
                     isInvalid={!!formErrors.email}
                     placeholder={t('auth.login.emailPlaceholder')}
-                    disabled={isLoading}
+                    disabled={state.isLoading}
                   />
                   <Form.Control.Feedback type="invalid">
                     {formErrors.email}
@@ -126,14 +126,14 @@ export const Login: React.FC = () => {
                       onChange={handleInputChange}
                       isInvalid={!!formErrors.password}
                       placeholder={t('auth.login.passwordPlaceholder')}
-                      disabled={isLoading}
+                      disabled={state.isLoading}
                     />
                     <Button
                       variant="outline-secondary"
                       size="sm"
                       className="position-absolute top-50 translate-middle-y end-0 me-2 border-0"
                       onClick={() => setShowPassword(!showPassword)}
-                      disabled={isLoading}
+                      disabled={state.isLoading}
                     >
                       {showPassword ? '👁️‍🗨️' : '👁️'}
                     </Button>
@@ -147,10 +147,10 @@ export const Login: React.FC = () => {
                   <Button
                     variant="primary"
                     type="submit"
-                    disabled={isLoading}
+                    disabled={state.isLoading}
                     size="lg"
                   >
-                    {isLoading ? (
+                    {state.isLoading ? (
                       <>
                         <Spinner size="sm" className="me-2" />
                         {t('auth.login.loading')}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner, ProgressBar } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../stores/authStore';
+import { useAuth } from '../hooks';
 import { useTranslation } from 'react-i18next';
 
 interface FormErrors {
@@ -13,7 +13,7 @@ interface FormErrors {
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
-  const { register, isLoading, error, clearError, isAuthenticated } = useAuthStore();
+  const { state, actions } = useAuth();
   const { t } = useTranslation();
   
   const [formData, setFormData] = useState({
@@ -29,10 +29,10 @@ export const Register: React.FC = () => {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
+    if (state.isAuthenticated) {
       navigate('/dashboard', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [state.isAuthenticated, navigate]);
 
   const getPasswordStrength = (password: string): number => {
     let strength = 0;
@@ -104,8 +104,8 @@ export const Register: React.FC = () => {
     }
     
     // Clear global error
-    if (error) {
-      clearError();
+    if (state.error) {
+      actions.clearError();
     }
   };
 
@@ -116,9 +116,9 @@ export const Register: React.FC = () => {
       return;
     }
     
-    const success = await register(formData.name.trim(), formData.email, formData.password);
+    const result = await actions.register(formData.name.trim(), formData.email, formData.password);
     
-    if (success) {
+    if (result.success) {
       navigate('/dashboard', { replace: true });
     }
   };
@@ -136,9 +136,9 @@ export const Register: React.FC = () => {
             </Card.Header>
             
             <Card.Body className="p-4">
-              {error && (
-                <Alert variant="danger" dismissible onClose={clearError}>
-                  {error}
+              {state.error && (
+                <Alert variant="danger" dismissible onClose={actions.clearError}>
+                  {state.error}
                 </Alert>
               )}
               
@@ -152,7 +152,7 @@ export const Register: React.FC = () => {
                     onChange={handleInputChange}
                     isInvalid={!!formErrors.name}
                     placeholder={t('auth.register.namePlaceholder')}
-                    disabled={isLoading}
+                    disabled={state.isLoading}
                   />
                   <Form.Control.Feedback type="invalid">
                     {formErrors.name}
@@ -168,7 +168,7 @@ export const Register: React.FC = () => {
                     onChange={handleInputChange}
                     isInvalid={!!formErrors.email}
                     placeholder={t('auth.register.emailPlaceholder')}
-                    disabled={isLoading}
+                    disabled={state.isLoading}
                   />
                   <Form.Control.Feedback type="invalid">
                     {formErrors.email}
@@ -185,14 +185,14 @@ export const Register: React.FC = () => {
                       onChange={handleInputChange}
                       isInvalid={!!formErrors.password}
                       placeholder={t('auth.register.passwordPlaceholder')}
-                      disabled={isLoading}
+                      disabled={state.isLoading}
                     />
                     <Button
                       variant="outline-secondary"
                       size="sm"
                       className="position-absolute top-50 translate-middle-y end-0 me-2 border-0"
                       onClick={() => setShowPassword(!showPassword)}
-                      disabled={isLoading}
+                      disabled={state.isLoading}
                     >
                       {showPassword ? '👁️‍🗨️' : '👁️'}
                     </Button>
@@ -229,14 +229,14 @@ export const Register: React.FC = () => {
                       onChange={handleInputChange}
                       isInvalid={!!formErrors.confirmPassword}
                       placeholder={t('auth.register.confirmPasswordPlaceholder')}
-                      disabled={isLoading}
+                      disabled={state.isLoading}
                     />
                     <Button
                       variant="outline-secondary"
                       size="sm"
                       className="position-absolute top-50 translate-middle-y end-0 me-2 border-0"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      disabled={isLoading}
+                      disabled={state.isLoading}
                     >
                       {showConfirmPassword ? '👁️‍🗨️' : '👁️'}
                     </Button>
@@ -250,10 +250,10 @@ export const Register: React.FC = () => {
                   <Button
                     variant="success"
                     type="submit"
-                    disabled={isLoading}
+                    disabled={state.isLoading}
                     size="lg"
                   >
-                    {isLoading ? (
+                    {state.isLoading ? (
                       <>
                         <Spinner size="sm" className="me-2" />
                         {t('auth.register.loading')}

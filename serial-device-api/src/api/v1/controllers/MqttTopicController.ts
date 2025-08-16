@@ -176,20 +176,8 @@ export class MqttTopicController {
       const mqttPayload = JSON.stringify({ message: message, userId: userId });
       mqttServiceInstance.publish(topic, mqttPayload);
       
-      // Save message to database with user ownership
-      let topicMessage: TopicMessage;
-      try {
-        topicMessage = new TopicMessage(message, topicEntity.id, userId);
-        await this.topicMessageRepository.create(topicMessage);
-      } catch (dbError: any) {
-        console.error('Database error saving message:', dbError);
-        res.status(500).json({ 
-          success: false, 
-          error: 'Failed to save message to database',
-          details: dbError.message 
-        });
-        return;
-      }
+      // Message will be saved by MQTT service when it receives from broker
+      // This prevents duplicate saving
       
       res.status(200).json({ 
         success: true, 
@@ -197,7 +185,6 @@ export class MqttTopicController {
         data: {
           topic: topic,
           message: message,
-          messageId: topicMessage.id,
           timestamp: new Date().toISOString()
         }
       });
