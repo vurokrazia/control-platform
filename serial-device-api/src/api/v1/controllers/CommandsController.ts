@@ -11,7 +11,64 @@ export class CommandsController {
     this.connectionManager = ConnectionManager.getInstance();
   }
 
-  // GET /devices/:deviceId/commands - Get device commands
+  /**
+   * @swagger
+   * /devices/{deviceId}/commands:
+   *   get:
+   *     tags: [Arduino]
+   *     summary: Get device commands
+   *     description: Retrieve command history for a specific device
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *       - name: limit
+   *         in: query
+   *         required: false
+   *         schema:
+   *           type: integer
+   *           default: 50
+   *           minimum: 1
+   *           maximum: 100
+   *         description: Maximum number of commands to return
+   *       - name: status
+   *         in: query
+   *         required: false
+   *         schema:
+   *           type: string
+   *           enum: [sent, acknowledged, failed]
+   *         description: Filter commands by status
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved commands
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       type: array
+   *                       items:
+   *                         $ref: '#/components/schemas/Command'
+   *                     count:
+   *                       type: integer
+   *                       example: 25
+   *                     filters:
+   *                       type: object
+   *                       properties:
+   *                         deviceId:
+   *                           type: string
+   *                         status:
+   *                           type: string
+   *                         limit:
+   *                           type: integer
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async index(req: Request, res: Response): Promise<void> {
     try {
       const { deviceId } = req.params;
@@ -44,7 +101,42 @@ export class CommandsController {
     }
   }
 
-  // GET /devices/:deviceId/commands/:id - Get specific command
+  /**
+   * @swagger
+   * /devices/{deviceId}/commands/{id}:
+   *   get:
+   *     tags: [Arduino]
+   *     summary: Get specific command
+   *     description: Retrieve details of a specific command
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *       - name: id
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Command ID
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved command
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       $ref: '#/components/schemas/Command'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async show(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
@@ -69,7 +161,61 @@ export class CommandsController {
     }
   }
 
-  // POST /devices/:deviceId/commands - Send command to device
+  /**
+   * @swagger
+   * /devices/{deviceId}/commands:
+   *   post:
+   *     tags: [Arduino]
+   *     summary: Send command to device
+   *     description: Send a command to the connected Arduino device
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CommandRequest'
+   *     responses:
+   *       201:
+   *         description: Command sent successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     message:
+   *                       type: string
+   *                       example: 'Command sent successfully'
+   *                     data:
+   *                       type: object
+   *                       properties:
+   *                         deviceId:
+   *                           type: string
+   *                         command:
+   *                           type: string
+   *                         value:
+   *                           oneOf:
+   *                             - type: string
+   *                             - type: number
+   *                         commandString:
+   *                           type: string
+   *                         sentAt:
+   *                           type: string
+   *                           format: date-time
+   *       400:
+   *         $ref: '#/components/responses/BadRequest'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async create(req: Request, res: Response): Promise<void> {
     try {
       const { deviceId } = req.params;
@@ -121,7 +267,62 @@ export class CommandsController {
     }
   }
 
-  // PUT /devices/:deviceId/commands/:id/status - Update command status
+  /**
+   * @swagger
+   * /devices/{deviceId}/commands/{id}/status:
+   *   put:
+   *     tags: [Arduino]
+   *     summary: Update command status
+   *     description: Update the status of a previously sent command
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *       - name: id
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Command ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               status:
+   *                 type: string
+   *                 enum: [acknowledged, failed]
+   *                 description: New command status
+   *               response:
+   *                 type: string
+   *                 description: Optional response message from device
+   *             required: [status]
+   *     responses:
+   *       200:
+   *         description: Command status updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     message:
+   *                       type: string
+   *                       example: 'Command status updated'
+   *                     data:
+   *                       $ref: '#/components/schemas/Command'
+   *       400:
+   *         $ref: '#/components/responses/BadRequest'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async updateStatus(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
@@ -156,7 +357,39 @@ export class CommandsController {
     }
   }
 
-  // GET /devices/:deviceId/commands/stats - Get command statistics
+  /**
+   * @swagger
+   * /devices/{deviceId}/commands/stats:
+   *   get:
+   *     tags: [Arduino]
+   *     summary: Get command statistics
+   *     description: Retrieve statistical information about device commands
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved command statistics
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       type: object
+   *                       properties:
+   *                         deviceId:
+   *                           type: string
+   *                         stats:
+   *                           $ref: '#/components/schemas/CommandStats'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async stats(req: Request, res: Response): Promise<void> {
     try {
       const { deviceId } = req.params;
@@ -192,7 +425,39 @@ export class CommandsController {
     }
   }
 
-  // GET /devices/:deviceId/commands/pending - Get pending commands
+  /**
+   * @swagger
+   * /devices/{deviceId}/commands/pending:
+   *   get:
+   *     tags: [Arduino]
+   *     summary: Get pending commands
+   *     description: Retrieve commands that have been sent but not yet acknowledged
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved pending commands
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       type: array
+   *                       items:
+   *                         $ref: '#/components/schemas/Command'
+   *                     count:
+   *                       type: integer
+   *                       example: 3
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async pending(req: Request, res: Response): Promise<void> {
     try {
       const { deviceId } = req.params;
@@ -211,7 +476,96 @@ export class CommandsController {
     }
   }
 
-  // POST /devices/:deviceId/commands/batch - Send multiple commands
+  /**
+   * @swagger
+   * /devices/{deviceId}/commands/batch:
+   *   post:
+   *     tags: [Arduino]
+   *     summary: Send multiple commands
+   *     description: Send multiple commands to the device in sequence
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               commands:
+   *                 type: array
+   *                 items:
+   *                   type: object
+   *                   properties:
+   *                     command:
+   *                       type: string
+   *                       example: 'LED'
+   *                     value:
+   *                       oneOf:
+   *                         - type: string
+   *                         - type: number
+   *                       example: 'ON'
+   *                   required: [command]
+   *                 minItems: 1
+   *                 example:
+   *                   - command: 'LED'
+   *                     value: 'ON'
+   *                   - command: 'MOTOR'
+   *                     value: 255
+   *             required: [commands]
+   *     responses:
+   *       201:
+   *         description: Batch commands completed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     message:
+   *                       type: string
+   *                       example: 'Batch commands completed: 2/2 successful'
+   *                     data:
+   *                       type: object
+   *                       properties:
+   *                         deviceId:
+   *                           type: string
+   *                         results:
+   *                           type: array
+   *                           items:
+   *                             type: object
+   *                             properties:
+   *                               command:
+   *                                 type: string
+   *                               value:
+   *                                 oneOf:
+   *                                   - type: string
+   *                                   - type: number
+   *                               success:
+   *                                 type: boolean
+   *                               error:
+   *                                 type: string
+   *                         summary:
+   *                           type: object
+   *                           properties:
+   *                             total:
+   *                               type: integer
+   *                             successful:
+   *                               type: integer
+   *                             failed:
+   *                               type: integer
+   *       400:
+   *         $ref: '#/components/responses/BadRequest'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async batch(req: Request, res: Response): Promise<void> {
     try {
       const { deviceId } = req.params;

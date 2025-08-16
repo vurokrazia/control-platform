@@ -8,7 +8,57 @@ export class SessionsController {
     this.sessionRepository = new DeviceSessionRepository();
   }
 
-  // GET /devices/:deviceId/sessions - Get device sessions
+  /**
+   * @swagger
+   * /devices/{deviceId}/sessions:
+   *   get:
+   *     tags: [Sessions]
+   *     summary: Get device sessions
+   *     description: Retrieve session history for a specific device
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *       - name: limit
+   *         in: query
+   *         required: false
+   *         schema:
+   *           type: integer
+   *           default: 30
+   *           minimum: 1
+   *           maximum: 100
+   *         description: Maximum number of sessions to return
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved device sessions
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       type: array
+   *                       items:
+   *                         $ref: '#/components/schemas/DeviceSession'
+   *                     count:
+   *                       type: integer
+   *                       example: 15
+   *                     pagination:
+   *                       type: object
+   *                       properties:
+   *                         limit:
+   *                           type: integer
+   *                         total:
+   *                           type: integer
+   *                         hasMore:
+   *                           type: boolean
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async index(req: Request, res: Response): Promise<void> {
     try {
       const { deviceId } = req.params;
@@ -33,7 +83,42 @@ export class SessionsController {
     }
   }
 
-  // GET /devices/:deviceId/sessions/:id - Get specific session
+  /**
+   * @swagger
+   * /devices/{deviceId}/sessions/{id}:
+   *   get:
+   *     tags: [Sessions]
+   *     summary: Get specific session
+   *     description: Retrieve details of a specific device session
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *       - name: id
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Session ID
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved session
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       $ref: '#/components/schemas/DeviceSession'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async show(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
@@ -58,7 +143,36 @@ export class SessionsController {
     }
   }
 
-  // GET /devices/:deviceId/sessions/active - Get active session
+  /**
+   * @swagger
+   * /devices/{deviceId}/sessions/active:
+   *   get:
+   *     tags: [Sessions]
+   *     summary: Get active session
+   *     description: Retrieve the currently active session for a device
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved active session
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       $ref: '#/components/schemas/DeviceSession'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async active(req: Request, res: Response): Promise<void> {
     try {
       const { deviceId } = req.params;
@@ -83,7 +197,36 @@ export class SessionsController {
     }
   }
 
-  // GET /devices/:deviceId/sessions/today - Get today's session
+  /**
+   * @swagger
+   * /devices/{deviceId}/sessions/today:
+   *   get:
+   *     tags: [Sessions]
+   *     summary: Get today's session
+   *     description: Retrieve the session for today for a specific device
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved today's session
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       $ref: '#/components/schemas/DeviceSession'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async today(req: Request, res: Response): Promise<void> {
     try {
       const { deviceId } = req.params;
@@ -108,7 +251,45 @@ export class SessionsController {
     }
   }
 
-  // POST /devices/:deviceId/sessions/:id/end - End a session
+  /**
+   * @swagger
+   * /devices/{deviceId}/sessions/{id}/end:
+   *   post:
+   *     tags: [Sessions]
+   *     summary: End a session
+   *     description: Manually end an active device session
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *       - name: id
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Session ID
+   *     responses:
+   *       200:
+   *         description: Session ended successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     message:
+   *                       type: string
+   *                       example: 'Session ended successfully'
+   *                     data:
+   *                       $ref: '#/components/schemas/DeviceSession'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async end(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
@@ -134,7 +315,48 @@ export class SessionsController {
     }
   }
 
-  // GET /devices/:deviceId/sessions/stats - Get session statistics
+  /**
+   * @swagger
+   * /devices/{deviceId}/sessions/stats:
+   *   get:
+   *     tags: [Sessions]
+   *     summary: Get session statistics
+   *     description: Retrieve statistical information about device sessions
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *       - name: days
+   *         in: query
+   *         required: false
+   *         schema:
+   *           type: integer
+   *           default: 30
+   *           minimum: 1
+   *           maximum: 365
+   *         description: Number of days to include in statistics
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved session statistics
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       type: object
+   *                       properties:
+   *                         deviceId:
+   *                           type: string
+   *                         stats:
+   *                           $ref: '#/components/schemas/SessionStats'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async stats(req: Request, res: Response): Promise<void> {
     try {
       const { deviceId } = req.params;
@@ -181,7 +403,68 @@ export class SessionsController {
     }
   }
 
-  // GET /devices/:deviceId/sessions/weekly - Get weekly session summary
+  /**
+   * @swagger
+   * /devices/{deviceId}/sessions/weekly:
+   *   get:
+   *     tags: [Sessions]
+   *     summary: Get weekly session summary
+   *     description: Retrieve a summary of sessions for the past week
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved weekly session data
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       type: object
+   *                       properties:
+   *                         deviceId:
+   *                           type: string
+   *                         weeklyData:
+   *                           type: array
+   *                           items:
+   *                             type: object
+   *                             properties:
+   *                               date:
+   *                                 type: string
+   *                                 format: date
+   *                                 example: '2024-01-20'
+   *                               hasSession:
+   *                                 type: boolean
+   *                               duration:
+   *                                 type: integer
+   *                                 description: 'Duration in seconds'
+   *                               commands:
+   *                                 type: integer
+   *                               dataReceived:
+   *                                 type: integer
+   *                               errors:
+   *                                 type: integer
+   *                         summary:
+   *                           type: object
+   *                           properties:
+   *                             activeDays:
+   *                               type: integer
+   *                               example: 5
+   *                             totalUsage:
+   *                               type: integer
+   *                               description: 'Total usage in seconds'
+   *                             totalCommands:
+   *                               type: integer
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async weekly(req: Request, res: Response): Promise<void> {
     try {
       const { deviceId } = req.params;

@@ -10,7 +10,57 @@ export class DeviceDataController {
     this.connectionManager = ConnectionManager.getInstance();
   }
 
-  // GET /devices/:deviceId/data - Get device data
+  /**
+   * @swagger
+   * /devices/{deviceId}/data:
+   *   get:
+   *     tags: [Status]
+   *     summary: Get device data history
+   *     description: Retrieve historical data entries for a specific device
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *       - $ref: '#/components/parameters/Limit'
+   *       - name: offset
+   *         in: query
+   *         required: false
+   *         schema:
+   *           type: integer
+   *           default: 0
+   *           minimum: 0
+   *         description: Number of records to skip
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved device data
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       type: array
+   *                       items:
+   *                         $ref: '#/components/schemas/DeviceData'
+   *                     count:
+   *                       type: integer
+   *                       example: 25
+   *                     pagination:
+   *                       type: object
+   *                       properties:
+   *                         limit:
+   *                           type: integer
+   *                         offset:
+   *                           type: integer
+   *                         hasMore:
+   *                           type: boolean
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async index(req: Request, res: Response): Promise<void> {
     try {
       const { deviceId } = req.params;
@@ -35,7 +85,42 @@ export class DeviceDataController {
     }
   }
 
-  // GET /devices/:deviceId/data/:id - Get specific data entry
+  /**
+   * @swagger
+   * /devices/{deviceId}/data/{id}:
+   *   get:
+   *     tags: [Status]
+   *     summary: Get specific data entry
+   *     description: Retrieve a specific data entry by ID
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *       - name: id
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Data entry ID
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved data entry
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       $ref: '#/components/schemas/DeviceData'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async show(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
@@ -60,7 +145,55 @@ export class DeviceDataController {
     }
   }
 
-  // POST /devices/:deviceId/data - Send data to device
+  /**
+   * @swagger
+   * /devices/{deviceId}/data:
+   *   post:
+   *     tags: [Status]
+   *     summary: Send data to device
+   *     description: Send raw data to the connected device
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/SendDataRequest'
+   *     responses:
+   *       201:
+   *         description: Data sent successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     message:
+   *                       type: string
+   *                       example: 'Data sent successfully'
+   *                     data:
+   *                       type: object
+   *                       properties:
+   *                         deviceId:
+   *                           type: string
+   *                         sent:
+   *                           type: string
+   *                         timestamp:
+   *                           type: string
+   *                           format: date-time
+   *       400:
+   *         $ref: '#/components/responses/BadRequest'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async create(req: Request, res: Response): Promise<void> {
     try {
       const { deviceId } = req.params;
@@ -106,7 +239,43 @@ export class DeviceDataController {
     }
   }
 
-  // GET /devices/:deviceId/data/latest - Get latest data
+  /**
+   * @swagger
+   * /devices/{deviceId}/data/latest:
+   *   get:
+   *     tags: [Status]
+   *     summary: Get latest data
+   *     description: Retrieve the most recent data from the connected device
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved latest data
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       type: object
+   *                       properties:
+   *                         deviceId:
+   *                           type: string
+   *                         lastData:
+   *                           $ref: '#/components/schemas/DataEntry'
+   *                         isConnected:
+   *                           type: boolean
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async latest(req: Request, res: Response): Promise<void> {
     try {
       const { deviceId } = req.params;
@@ -137,7 +306,55 @@ export class DeviceDataController {
     }
   }
 
-  // GET /devices/:deviceId/data/stream - Get real-time data (future WebSocket endpoint)
+  /**
+   * @swagger
+   * /devices/{deviceId}/data/stream:
+   *   get:
+   *     tags: [Status]
+   *     summary: Get streaming data info
+   *     description: Get information about real-time data streaming capabilities (WebSocket endpoint info)
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved streaming info
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       type: object
+   *                       properties:
+   *                         deviceId:
+   *                           type: string
+   *                         lastData:
+   *                           $ref: '#/components/schemas/DataEntry'
+   *                         isConnected:
+   *                           type: boolean
+   *                         streaming:
+   *                           type: object
+   *                           properties:
+   *                             available:
+   *                               type: boolean
+   *                               example: false
+   *                             recommendedPollingInterval:
+   *                               type: integer
+   *                               example: 1000
+   *                             websocketEndpoint:
+   *                               type: string
+   *                               example: '/ws/devices/arduino1/data'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async stream(req: Request, res: Response): Promise<void> {
     try {
       const { deviceId } = req.params;
@@ -175,7 +392,52 @@ export class DeviceDataController {
     }
   }
 
-  // DELETE /devices/:deviceId/data - Clean old data
+  /**
+   * @swagger
+   * /devices/{deviceId}/data:
+   *   delete:
+   *     tags: [Status]
+   *     summary: Clean old data
+   *     description: Remove old data entries, keeping only the most recent ones
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *       - name: keepLast
+   *         in: query
+   *         required: false
+   *         schema:
+   *           type: integer
+   *           default: 100
+   *           minimum: 1
+   *         description: Number of most recent entries to keep
+   *     responses:
+   *       200:
+   *         description: Data cleanup completed successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     message:
+   *                       type: string
+   *                       example: 'Cleaned up old data for device arduino1'
+   *                     data:
+   *                       type: object
+   *                       properties:
+   *                         deletedCount:
+   *                           type: integer
+   *                           example: 45
+   *                         keptLast:
+   *                           type: integer
+   *                           example: 100
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async cleanup(req: Request, res: Response): Promise<void> {
     try {
       const { deviceId } = req.params;
@@ -197,7 +459,39 @@ export class DeviceDataController {
     }
   }
 
-  // GET /devices/:deviceId/data/stats - Get data statistics
+  /**
+   * @swagger
+   * /devices/{deviceId}/data/stats:
+   *   get:
+   *     tags: [Status]
+   *     summary: Get data statistics
+   *     description: Retrieve statistical information about device data
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved data statistics
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       type: object
+   *                       properties:
+   *                         deviceId:
+   *                           type: string
+   *                         stats:
+   *                           $ref: '#/components/schemas/DataStats'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async stats(req: Request, res: Response): Promise<void> {
     try {
       const { deviceId } = req.params;

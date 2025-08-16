@@ -57,6 +57,10 @@ const swaggerOptions: swaggerJsdoc.Options = {
     ],
     tags: [
       {
+        name: 'Authentication',
+        description: 'User authentication and profile management'
+      },
+      {
         name: 'Devices',
         description: 'Device creation and management'
       },
@@ -397,19 +401,15 @@ const swaggerOptions: swaggerJsdoc.Options = {
         UpdateTopicRequest: {
           type: 'object',
           properties: {
-            name: {
-              type: 'string',
-              example: 'robots/sparky/commands/updated',
-              description: 'Updated MQTT topic name'
-            },
             autoSubscribe: {
               type: 'boolean',
               example: false,
               description: 'Whether to automatically subscribe to this topic'
             }
-          }
+          },
+          required: ['autoSubscribe']
         },
-        PublishTopicRequest: {
+        PublishMessageRequest: {
           type: 'object',
           properties: {
             topic: {
@@ -417,13 +417,13 @@ const swaggerOptions: swaggerJsdoc.Options = {
               example: 'robots/sparky/commands',
               description: 'MQTT topic name to publish to'
             },
-            payload: {
-              type: 'object',
-              example: { "command": "W", "speed": 200 },
-              description: 'Message payload to publish'
+            message: {
+              type: 'string',
+              example: '{ "command": "W", "speed": 200 }',
+              description: 'Message content to publish'
             }
           },
-          required: ['topic', 'payload']
+          required: ['topic', 'message']
         },
         TopicMessage: {
           type: 'object',
@@ -434,11 +434,11 @@ const swaggerOptions: swaggerJsdoc.Options = {
               description: 'UUID message identifier'
             },
             payload: {
-              type: 'object',
-              example: { "command": "W", "speed": 200 },
-              description: 'Message payload data'
+              type: 'string',
+              example: '{ "command": "W", "speed": 200 }',
+              description: 'Message payload data as string'
             },
-            topicId: {
+            topicOwner: {
               type: 'string',
               example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
               description: 'Topic ID that owns this message'
@@ -454,7 +454,7 @@ const swaggerOptions: swaggerJsdoc.Options = {
               example: '2024-01-20T10:30:00.000Z'
             }
           },
-          required: ['id', 'payload', 'topicId', 'userId', 'createdAt']
+          required: ['id', 'payload', 'topicOwner', 'userId', 'createdAt']
         },
         DeviceStatusResponse: {
           allOf: [
@@ -688,6 +688,332 @@ const swaggerOptions: swaggerJsdoc.Options = {
                   example: 30
                 }
               }
+            }
+          }
+        },
+        User: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              example: 'user-a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+              description: 'User unique identifier'
+            },
+            name: {
+              type: 'string',
+              example: 'John Doe',
+              description: 'User full name'
+            },
+            email: {
+              type: 'string',
+              format: 'email',
+              example: 'john.doe@example.com',
+              description: 'User email address'
+            },
+            language: {
+              type: 'string',
+              enum: ['en', 'es'],
+              example: 'en',
+              description: 'User language preference'
+            },
+            isActive: {
+              type: 'boolean',
+              example: true,
+              description: 'User account status'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-20T10:00:00.000Z'
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-20T10:30:00.000Z'
+            }
+          },
+          required: ['id', 'name', 'email', 'language', 'isActive', 'createdAt', 'updatedAt']
+        },
+        UserResponse: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              example: 'user-a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+            },
+            name: {
+              type: 'string',
+              example: 'John Doe'
+            },
+            email: {
+              type: 'string',
+              format: 'email',
+              example: 'john.doe@example.com'
+            },
+            language: {
+              type: 'string',
+              enum: ['en', 'es'],
+              example: 'en'
+            },
+            isActive: {
+              type: 'boolean',
+              example: true
+            }
+          },
+          required: ['id', 'name', 'email', 'language', 'isActive']
+        },
+        RegisterRequest: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              example: 'John Doe',
+              description: 'User full name'
+            },
+            email: {
+              type: 'string',
+              format: 'email',
+              example: 'john.doe@example.com',
+              description: 'User email address'
+            },
+            password: {
+              type: 'string',
+              minLength: 6,
+              example: 'securePassword123',
+              description: 'User password (minimum 6 characters)'
+            },
+            language: {
+              type: 'string',
+              enum: ['en', 'es'],
+              example: 'en',
+              default: 'en',
+              description: 'User language preference'
+            }
+          },
+          required: ['name', 'email', 'password']
+        },
+        LoginRequest: {
+          type: 'object',
+          properties: {
+            email: {
+              type: 'string',
+              format: 'email',
+              example: 'john.doe@example.com',
+              description: 'User email address'
+            },
+            password: {
+              type: 'string',
+              example: 'securePassword123',
+              description: 'User password'
+            }
+          },
+          required: ['email', 'password']
+        },
+        ChangePasswordRequest: {
+          type: 'object',
+          properties: {
+            currentPassword: {
+              type: 'string',
+              example: 'currentPassword123',
+              description: 'Current user password'
+            },
+            newPassword: {
+              type: 'string',
+              minLength: 6,
+              example: 'newSecurePassword123',
+              description: 'New password (minimum 6 characters)'
+            }
+          },
+          required: ['currentPassword', 'newPassword']
+        },
+        Command: {
+          type: 'object',
+          properties: {
+            _id: {
+              type: 'string',
+              example: '507f1f77bcf86cd799439011',
+              description: 'Command MongoDB ObjectId'
+            },
+            deviceId: {
+              type: 'string',
+              example: 'device-1728912345678-ab3cd9ef2',
+              description: 'Associated device identifier'
+            },
+            command: {
+              type: 'string',
+              example: 'LED',
+              description: 'Command name'
+            },
+            value: {
+              oneOf: [
+                { type: 'string' },
+                { type: 'number' }
+              ],
+              example: 'ON',
+              description: 'Command value (optional)'
+            },
+            status: {
+              type: 'string',
+              enum: ['sent', 'acknowledged', 'failed'],
+              example: 'sent',
+              description: 'Command execution status'
+            },
+            sentAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-20T10:30:00.000Z',
+              description: 'When the command was sent'
+            },
+            acknowledgedAt: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              example: '2024-01-20T10:30:01.000Z',
+              description: 'When the command was acknowledged'
+            },
+            response: {
+              type: 'string',
+              nullable: true,
+              example: 'OK',
+              description: 'Response from device'
+            }
+          },
+          required: ['deviceId', 'command', 'status', 'sentAt']
+        },
+        DeviceData: {
+          type: 'object',
+          properties: {
+            _id: {
+              type: 'string',
+              example: '507f1f77bcf86cd799439011',
+              description: 'Data entry MongoDB ObjectId'
+            },
+            deviceId: {
+              type: 'string',
+              example: 'device-1728912345678-ab3cd9ef2',
+              description: 'Associated device identifier'
+            },
+            data: {
+              type: 'string',
+              example: 'Temperature: 25.6C',
+              description: 'Data content'
+            },
+            direction: {
+              type: 'string',
+              enum: ['incoming', 'outgoing'],
+              example: 'incoming',
+              description: 'Data direction'
+            },
+            timestamp: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-01-20T10:30:00.000Z',
+              description: 'Data timestamp'
+            }
+          },
+          required: ['deviceId', 'data', 'direction', 'timestamp']
+        },
+        CommandStats: {
+          type: 'object',
+          properties: {
+            total: {
+              type: 'integer',
+              example: 150,
+              description: 'Total number of commands'
+            },
+            byStatus: {
+              type: 'object',
+              properties: {
+                sent: {
+                  type: 'integer',
+                  example: 10
+                },
+                acknowledged: {
+                  type: 'integer',
+                  example: 135
+                },
+                failed: {
+                  type: 'integer',
+                  example: 5
+                }
+              }
+            },
+            successRate: {
+              type: 'number',
+              example: 90.0,
+              description: 'Success rate percentage'
+            },
+            mostUsedCommands: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  command: {
+                    type: 'string',
+                    example: 'LED'
+                  },
+                  count: {
+                    type: 'integer',
+                    example: 45
+                  }
+                }
+              },
+              description: 'Top 5 most used commands'
+            },
+            dateRange: {
+              type: 'object',
+              properties: {
+                oldest: {
+                  type: 'string',
+                  format: 'date-time',
+                  nullable: true
+                },
+                newest: {
+                  type: 'string',
+                  format: 'date-time',
+                  nullable: true
+                }
+              }
+            }
+          }
+        },
+        DataStats: {
+          type: 'object',
+          properties: {
+            totalEntries: {
+              type: 'integer',
+              example: 500,
+              description: 'Total number of data entries'
+            },
+            incoming: {
+              type: 'integer',
+              example: 300,
+              description: 'Number of incoming data entries'
+            },
+            outgoing: {
+              type: 'integer',
+              example: 200,
+              description: 'Number of outgoing data entries'
+            },
+            dateRange: {
+              type: 'object',
+              properties: {
+                oldest: {
+                  type: 'string',
+                  format: 'date-time',
+                  nullable: true
+                },
+                newest: {
+                  type: 'string',
+                  format: 'date-time',
+                  nullable: true
+                }
+              }
+            },
+            avgDataSize: {
+              type: 'number',
+              example: 25.4,
+              description: 'Average data size in characters'
             }
           }
         },

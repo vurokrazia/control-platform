@@ -14,7 +14,38 @@ export class DevicesController {
     this.connectionManager = ConnectionManager.getInstance();
   }
 
-  // GET /devices - List user's devices only
+  /**
+   * @swagger
+   * /devices:
+   *   get:
+   *     tags: [Devices]
+   *     summary: List user's devices
+   *     description: Retrieve all devices owned by the authenticated user
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved devices
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       type: array
+   *                       items:
+   *                         $ref: '#/components/schemas/Device'
+   *                     count:
+   *                       type: integer
+   *                       example: 3
+   *                       description: Total number of devices
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async index(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.userId;
@@ -39,7 +70,43 @@ export class DevicesController {
     }
   }
 
-  // POST /devices - Create new device
+  /**
+   * @swagger
+   * /devices:
+   *   post:
+   *     tags: [Devices]
+   *     summary: Create new device
+   *     description: Create a new device for the authenticated user
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CreateDeviceRequest'
+   *     responses:
+   *       201:
+   *         description: Device created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     message:
+   *                       type: string
+   *                       example: 'Device created successfully'
+   *                     data:
+   *                       $ref: '#/components/schemas/Device'
+   *       400:
+   *         $ref: '#/components/responses/BadRequest'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async create(req: Request, res: Response): Promise<void> {
     try {
       const { name, type = 'arduino', port, baudRate = 9600 } = req.body;
@@ -103,7 +170,44 @@ export class DevicesController {
     }
   }
 
-  // GET /devices/:id - Get specific user device
+  /**
+   * @swagger
+   * /devices/{id}:
+   *   get:
+   *     tags: [Devices]
+   *     summary: Get specific device
+   *     description: Retrieve a specific device owned by the authenticated user
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved device
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       allOf:
+   *                         - $ref: '#/components/schemas/Device'
+   *                         - type: object
+   *                           properties:
+   *                             connectionInfo:
+   *                               $ref: '#/components/schemas/ConnectionInfo'
+   *                             isConnected:
+   *                               type: boolean
+   *                               example: true
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async show(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
@@ -145,7 +249,48 @@ export class DevicesController {
     }
   }
 
-  // GET /devices/:id/topics - Get MQTT topics for user's device
+  /**
+   * @swagger
+   * /devices/{id}/topics:
+   *   get:
+   *     tags: [Devices]
+   *     summary: Get device MQTT topics
+   *     description: Retrieve all MQTT topics associated with a specific device
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved device topics
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       type: array
+   *                       items:
+   *                         $ref: '#/components/schemas/MqttTopic'
+   *                     count:
+   *                       type: integer
+   *                       example: 2
+   *                     device:
+   *                       type: object
+   *                       properties:
+   *                         deviceId:
+   *                           type: string
+   *                         name:
+   *                           type: string
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async getTopics(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
@@ -188,7 +333,52 @@ export class DevicesController {
     }
   }
 
-  // POST /devices/:id/connect - Connect to device
+  /**
+   * @swagger
+   * /devices/{id}/connect:
+   *   post:
+   *     tags: [Devices]
+   *     summary: Connect to device
+   *     description: Establish a serial connection to the specified device
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/ConnectRequest'
+   *     responses:
+   *       200:
+   *         description: Device connected successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     message:
+   *                       type: string
+   *                       example: 'Device connected successfully'
+   *                     data:
+   *                       type: object
+   *                       properties:
+   *                         deviceId:
+   *                           type: string
+   *                         port:
+   *                           type: string
+   *                         baudRate:
+   *                           type: integer
+   *       400:
+   *         $ref: '#/components/responses/BadRequest'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async connect(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
@@ -257,7 +447,42 @@ export class DevicesController {
     }
   }
 
-  // POST /devices/:id/disconnect - Disconnect user's device
+  /**
+   * @swagger
+   * /devices/{id}/disconnect:
+   *   post:
+   *     tags: [Devices]
+   *     summary: Disconnect device
+   *     description: Disconnect from the specified device
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     responses:
+   *       200:
+   *         description: Device disconnected successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     message:
+   *                       type: string
+   *                       example: 'Device arduino1 disconnected successfully'
+   *                     data:
+   *                       type: object
+   *                       properties:
+   *                         deviceId:
+   *                           type: string
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async disconnect(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
@@ -301,7 +526,31 @@ export class DevicesController {
     }
   }
 
-  // GET /devices/:id/status - Get user device status
+  /**
+   * @swagger
+   * /devices/{id}/status:
+   *   get:
+   *     tags: [Devices]
+   *     summary: Get device status
+   *     description: Retrieve the current status and connection information of a device
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved device status
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/DeviceStatusResponse'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async status(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
@@ -351,7 +600,54 @@ export class DevicesController {
     }
   }
 
-  // PUT /devices/:id - Update device
+  /**
+   * @swagger
+   * /devices/{id}:
+   *   put:
+   *     tags: [Devices]
+   *     summary: Update device
+   *     description: Update device properties like name and type
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               name:
+   *                 type: string
+   *                 example: 'Updated Arduino Robot'
+   *                 description: 'New device name'
+   *               type:
+   *                 type: string
+   *                 example: 'arduino'
+   *                 description: 'Device type'
+   *     responses:
+   *       200:
+   *         description: Device updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     message:
+   *                       type: string
+   *                       example: 'Device updated successfully'
+   *                     data:
+   *                       $ref: '#/components/schemas/Device'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
@@ -382,7 +678,37 @@ export class DevicesController {
     }
   }
 
-  // DELETE /devices/:id - Delete device
+  /**
+   * @swagger
+   * /devices/{id}:
+   *   delete:
+   *     tags: [Devices]
+   *     summary: Delete device
+   *     description: Delete a device and disconnect it if currently connected
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - $ref: '#/components/parameters/DeviceId'
+   *     responses:
+   *       200:
+   *         description: Device deleted successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     message:
+   *                       type: string
+   *                       example: 'Device arduino1 deleted successfully'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async destroy(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
@@ -412,7 +738,33 @@ export class DevicesController {
     }
   }
 
-  // POST /devices/disconnect-all - Disconnect all devices
+  /**
+   * @swagger
+   * /devices/disconnect-all:
+   *   post:
+   *     tags: [Devices]
+   *     summary: Disconnect all devices
+   *     description: Disconnect all currently connected devices
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: All devices disconnected successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     message:
+   *                       type: string
+   *                       example: 'All devices disconnected successfully'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   async disconnectAll(_req: Request, res: Response): Promise<void> {
     try {
       await this.connectionManager.disconnectAll();

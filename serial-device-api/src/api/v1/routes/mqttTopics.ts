@@ -215,6 +215,45 @@ router.use(authMiddleware.requireAuth);
 /**
  * @swagger
  * /api/v1/mqtt-topics/{id}:
+ *   put:
+ *     tags: [MQTT Topics]
+ *     summary: Update MQTT topic
+ *     description: Update an MQTT topic's subscription settings
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Topic ID
+ *         example: "550e8400-e29b-41d4-a716-446655440000"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateTopicRequest'
+ *     responses:
+ *       200:
+ *         description: Topic updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/MqttTopic'
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Authentication required
+ *       404:
+ *         description: Topic not found or access denied
  *   delete:
  *     tags: [MQTT Topics]
  *     summary: Delete MQTT topic

@@ -11,6 +11,108 @@ export class TopicMessageController {
     this.mqttTopicRepository = new MqttTopicRepository();
   }
 
+  /**
+   * @swagger
+   * /topics/{topicId}/topicMessages:
+   *   get:
+   *     tags:
+   *       - Topic Messages
+   *     summary: Get messages for a specific MQTT topic
+   *     description: Retrieves all messages for the specified topic that belong to the authenticated user
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - name: topicId
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   *           example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+   *         description: Unique topic identifier
+   *     responses:
+   *       200:
+   *         description: Messages retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     topic:
+   *                       type: object
+   *                       properties:
+   *                         id:
+   *                           type: string
+   *                           example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+   *                         name:
+   *                           type: string
+   *                           example: "robots/sparky/commands"
+   *                         createdAt:
+   *                           type: string
+   *                           format: date-time
+   *                           example: "2024-01-20T10:00:00.000Z"
+   *                     messages:
+   *                       type: array
+   *                       items:
+   *                         $ref: '#/components/schemas/TopicMessage'
+   *                     messageCount:
+   *                       type: integer
+   *                       example: 5
+   *             examples:
+   *               success:
+   *                 summary: Successful response with messages
+   *                 value:
+   *                   success: true
+   *                   data:
+   *                     topic:
+   *                       id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+   *                       name: "robots/sparky/commands"
+   *                       createdAt: "2024-01-20T10:00:00.000Z"
+   *                     messages:
+   *                       - id: "msg-1234-5678-9abc-def0"
+   *                         payload: "{ \"command\": \"W\", \"speed\": 200 }"
+   *                         topicOwner: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+   *                         userId: "user-a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+   *                         createdAt: "2024-01-20T10:30:00.000Z"
+   *                       - id: "msg-2345-6789-bcde-f012"
+   *                         payload: "{ \"command\": \"S\" }"
+   *                         topicOwner: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+   *                         userId: "user-a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+   *                         createdAt: "2024-01-20T10:35:00.000Z"
+   *                     messageCount: 2
+   *               empty:
+   *                 summary: No messages found
+   *                 value:
+   *                   success: true
+   *                   data:
+   *                     topic:
+   *                       id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+   *                       name: "robots/sparky/commands"
+   *                       createdAt: "2024-01-20T10:00:00.000Z"
+   *                     messages: []
+   *                     messageCount: 0
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       404:
+   *         description: Topic not found or access denied
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *             examples:
+   *               not_found:
+   *                 summary: Topic not found
+   *                 value:
+   *                   success: false
+   *                   error: "Topic not found or access denied"
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   public async getMessagesByTopicId(req: Request, res: Response): Promise<void> {
     try {
       const { topicId } = req.params;
