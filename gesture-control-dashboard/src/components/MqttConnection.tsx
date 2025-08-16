@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Form, Button, Alert, Badge, Row, Col, ListGroup, Spinner } from 'react-bootstrap';
-import JSONPretty from 'react-json-pretty';
-import 'react-json-pretty/themes/monikai.css';
-import { mqttTopicsRepository, MqttTopic, TopicMessage } from '../repositories/mqttTopicsRepository';
-import { devicesRepository, Device } from '../repositories/devicesRepository';
+import { useDevices, useMqttTopics, useTopicMessages } from '../hooks';
 import { useTranslation } from 'react-i18next';
+import { jsonFormatter } from '../utils/jsonFormatter';
+import type { MqttTopic } from '../repositories/mqttTopicsRepository';
 
 interface MqttConnectionProps {
   // No props needed - this component manages its own topic selection
@@ -12,179 +11,59 @@ interface MqttConnectionProps {
 
 const MqttConnection: React.FC<MqttConnectionProps> = () => {
   const { t } = useTranslation();
-  const [devices, setDevices] = useState<Device[]>([]);
-  const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
-  const [topics, setTopics] = useState<MqttTopic[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingDevices, setLoadingDevices] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [messages, setMessages] = useState<TopicMessage[]>([]);
-  const [loadingMessages, setLoadingMessages] = useState(false);
+  
+  // 3-layer architecture hooks
+  const devices = useDevices();
+  const topics = useMqttTopics();
+  const topicMessages = useTopicMessages();
+  
+  // Local UI state only
   const [selectedTopicData, setSelectedTopicData] = useState<MqttTopic | null>(null);
-  const [refreshInterval, setRefreshInterval] = useState(5); // Default 5 seconds
-  const [autoRefreshDevices, setAutoRefreshDevices] = useState(false); // Auto refresh devices
-  const [lastDeviceUpdate, setLastDeviceUpdate] = useState<Date>(new Date());
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const deviceIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    loadDevices();
+    devices.actions.loadAllDevices();
   }, []);
 
   useEffect(() => {
-    if (selectedDevice) {
-      loadTopics();
+    if (devices.state.selectedDevice) {
+      topics.actions.loadTopicsByDevice(devices.state.selectedDevice.deviceId);
     } else {
-      setTopics([]);
       setSelectedTopicData(null);
     }
-  }, [selectedDevice]);
+  }, [devices.state.selectedDevice]);
 
   useEffect(() => {
-    if (selectedTopicData) {
-      loadMessages();
-      startAutoRefresh();
+    if (selectedTopicData?.id) {
+      void topicMessages.actions.loadTopicMessages(selectedTopicData.id);
+      void topicMessages.actions.startMessageAutoRefresh(selectedTopicData.id, topicMessages.state.refreshInterval);
     } else {
-      stopAutoRefresh();
+      void topicMessages.actions.stopMessageAutoRefresh();
+      void topicMessages.actions.clearMessages();
     }
 
-    return () => stopAutoRefresh();
-  }, [selectedTopicData, refreshInterval]);
+    return () => {
+      void topicMessages.actions.stopMessageAutoRefresh();
+    };
+  }, [selectedTopicData, topicMessages.state.refreshInterval]);
 
   useEffect(() => {
-    if (autoRefreshDevices) {
-      startDeviceAutoRefresh();
+    if (topicMessages.state.deviceAutoRefresh) {
+      void topicMessages.actions.startDeviceAutoRefresh();
     } else {
-      stopDeviceAutoRefresh();
+      void topicMessages.actions.stopDeviceAutoRefresh();
     }
 
-    return () => stopDeviceAutoRefresh();
-  }, [autoRefreshDevices]);
+    return () => {
+      void topicMessages.actions.stopDeviceAutoRefresh();
+    };
+  }, [topicMessages.state.deviceAutoRefresh]);
 
-  const loadDevices = async () => {
-    setLoadingDevices(true);
-    setError(null);
-    try {
-      const devicesList = await devicesRepository.getAllDevices();
-      
-      // Check if devices list actually changed
-      const devicesChanged = JSON.stringify(devices) !== JSON.stringify(devicesList);
-      if (devicesChanged) {
-        setLastDeviceUpdate(new Date());
-        console.log('📱 Devices list updated:', devicesList.length, 'devices');
-      }
-      
-      setDevices(devicesList);
-      
-      if (devicesList.length > 0 && !selectedDevice) {
-        setSelectedDevice(devicesList[0]);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error loading devices');
-    } finally {
-      setLoadingDevices(false);
-    }
-  };
-
-  const loadTopics = async () => {
-    if (!selectedDevice) return;
-    
-    setLoading(true);
-    setError(null);
-    try {
-      const topicsList = await mqttTopicsRepository.getDeviceTopics(selectedDevice.deviceId);
-      setTopics(topicsList);
-      
-      if (topicsList.length > 0 && !selectedTopicData) {
-        setSelectedTopicData(topicsList[0]);
-      } else if (topicsList.length === 0) {
-        setSelectedTopicData(null);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error loading topics');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMessages = async () => {
-    if (!selectedTopicData?.id) return;
-    
-    setLoadingMessages(true);
-    try {
-      const response = await mqttTopicsRepository.getTopicMessages(selectedTopicData.id);
-      setMessages(response.messages);
-    } catch (err) {
-      console.error('Error loading messages:', err);
-      setMessages([]);
-    } finally {
-      setLoadingMessages(false);
-    }
-  };
-
-  const handleRefreshDevices = async () => {
-    await loadDevices();
-  };
-
-  const handleRefreshTopics = async () => {
-    await loadTopics();
-  };
-
-  const handleRefreshMessages = async () => {
-    await loadMessages();
-  };
-
-  const startAutoRefresh = () => {
-    stopAutoRefresh(); // Clear any existing interval
-    intervalRef.current = setInterval(() => {
-      loadMessages();
-    }, refreshInterval * 1000); // Convert seconds to milliseconds
-  };
-
-  const stopAutoRefresh = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  };
-
-  const startDeviceAutoRefresh = () => {
-    stopDeviceAutoRefresh(); // Clear any existing interval
-    deviceIntervalRef.current = setInterval(() => {
-      loadDevices();
-    }, 30000); // Refresh devices every 30 seconds
-  };
-
-  const stopDeviceAutoRefresh = () => {
-    if (deviceIntervalRef.current) {
-      clearInterval(deviceIntervalRef.current);
-      deviceIntervalRef.current = null;
-    }
-  };
-
-  const handleDeviceChange = (deviceId: string) => {
-    const device = devices.find(d => d.deviceId === deviceId);
-    setSelectedDevice(device || null);
-    setSelectedTopicData(null); // Reset topic selection
-  };
-
-  const handleTopicChange = (topicName: string) => {
-    const topic = topics.find(t => t.name === topicName);
-    setSelectedTopicData(topic || null);
-  };
-
-  const clearError = () => {
-    setError(null);
-  };
-
-  const formatPayload = (payload: string) => {
-    try {
-      const parsed = JSON.parse(payload);
-      return <JSONPretty data={parsed} theme="monikai" />;
-    } catch {
-      return <span className="font-monospace">{payload}</span>;
-    }
-  };
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      void topicMessages.actions.cleanupAllIntervals();
+    };
+  }, []);
 
   return (
     <Card className="mb-3">
@@ -195,9 +74,13 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
         </Badge>
       </Card.Header>
       <Card.Body>
-        {error && (
-          <Alert variant="danger" dismissible onClose={clearError}>
-            {error}
+        {(devices.state.error || topics.state.error || topicMessages.state.error) && (
+          <Alert variant="danger" dismissible onClose={() => {
+            devices.actions.clearError();
+            topics.actions.clearError();
+            topicMessages.actions.clearError();
+          }}>
+            {devices.state.error || topics.state.error || topicMessages.state.error}
           </Alert>
         )}
 
@@ -207,36 +90,46 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
             <Form.Label className="fw-bold mb-0">{t('mqtt.modal.selectDevice')}:</Form.Label>
             <div className="d-flex gap-2">
               <Button
-                variant={autoRefreshDevices ? "success" : "outline-secondary"}
+                variant={topicMessages.state.deviceAutoRefresh ? "success" : "outline-secondary"}
                 size="sm"
-                onClick={() => setAutoRefreshDevices(!autoRefreshDevices)}
-                title={autoRefreshDevices ? t('common.autoRefreshOn') : t('common.autoRefreshOff')}
+                onClick={() => topicMessages.actions.setDeviceAutoRefresh(!topicMessages.state.deviceAutoRefresh)}
+                title={topicMessages.state.deviceAutoRefresh ? t('common.autoRefreshOn') : t('common.autoRefreshOff')}
               >
-                {autoRefreshDevices ? '⏰ Auto' : '⏰ Manual'}
+                {topicMessages.state.deviceAutoRefresh ? '⏰ Auto' : '⏰ Manual'}
               </Button>
               <Button
                 variant="outline-secondary"
                 size="sm"
-                onClick={handleRefreshDevices}
-                disabled={loadingDevices}
+                onClick={() => {
+                  devices.actions.loadAllDevices();
+                  topicMessages.actions.updateLastDeviceUpdate();
+                }}
+                disabled={devices.state.isLoading}
               >
-                {loadingDevices ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
+                {devices.state.isLoading ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
               </Button>
             </div>
           </div>
           <Form.Select
-            value={selectedDevice?.deviceId || ''}
-            onChange={(e) => handleDeviceChange(e.target.value)}
-            disabled={loadingDevices || devices.length === 0}
+            value={devices.state.selectedDevice?.deviceId || ''}
+            onChange={(e) => {
+              topicMessages.actions.handleDeviceSelection(
+                devices.state.devices,
+                e.target.value,
+                devices.actions.setSelectedDevice,
+                () => setSelectedTopicData(null)
+              );
+            }}
+            disabled={devices.state.isLoading || !devices.state.hasDevices}
           >
-            {loadingDevices ? (
+            {devices.state.isLoading ? (
               <option>{t('common.loading')}</option>
-            ) : devices.length === 0 ? (
+            ) : !devices.state.hasDevices ? (
               <option>{t('devices.noDevices')}</option>
             ) : (
               <>
                 <option value="">{t('mqtt.modal.selectDevice')}</option>
-                {devices.map((device) => (
+                {devices.state.devices.map((device) => (
                   <option key={device.deviceId} value={device.deviceId}>
                     {device.name} ({device.deviceId})
                   </option>
@@ -246,7 +139,7 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
           </Form.Select>
           <Form.Text className="text-muted">
             {t('mqtt.modal.helpText')}
-            {autoRefreshDevices && (
+            {topicMessages.state.deviceAutoRefresh && (
               <span className="ms-2 text-success">
                 ⏰ {t('common.autoRefresh')} (30s)
               </span>
@@ -255,32 +148,42 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
         </Form.Group>
 
         {/* Topic Selection - Only show if device is selected */}
-        {selectedDevice && (
+        {devices.state.selectedDevice && (
           <Form.Group className="mb-3">
             <div className="d-flex justify-content-between align-items-center mb-2">
               <Form.Label className="fw-bold mb-0">{t('mqtt.topics.addTopic')}:</Form.Label>
               <Button
                 variant="outline-secondary"
                 size="sm"
-                onClick={handleRefreshTopics}
-                disabled={loading}
+                onClick={() => {
+                  if (devices.state.selectedDevice) {
+                    topics.actions.loadTopicsByDevice(devices.state.selectedDevice.deviceId);
+                  }
+                }}
+                disabled={topics.state.loading.topics}
               >
-                {loading ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
+                {topics.state.loading.topics ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
               </Button>
             </div>
             <Form.Select
               value={selectedTopicData?.name || ''}
-              onChange={(e) => handleTopicChange(e.target.value)}
-              disabled={loading || topics.length === 0}
+              onChange={(e) => {
+                topicMessages.actions.handleTopicSelection(
+                  topics.state.topics,
+                  e.target.value,
+                  setSelectedTopicData
+                );
+              }}
+              disabled={topics.state.loading.topics || topics.state.topics.length === 0}
             >
-              {loading ? (
+              {topics.state.loading.topics ? (
                 <option>{t('common.loading')}</option>
-              ) : topics.length === 0 ? (
+              ) : topics.state.topics.length === 0 ? (
                 <option>{t('mqtt.topics.noTopics')}</option>
               ) : (
                 <>
                   <option value="">{t('mqtt.topics.addTopic')}</option>
-                  {topics.map((topic) => (
+                  {topics.state.topics.map((topic) => (
                     <option key={topic.id || topic.name} value={topic.name}>
                       {topic.name}
                     </option>
@@ -294,23 +197,23 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
           </Form.Group>
         )}
 
-        {selectedDevice && selectedTopicData && (
+        {devices.state.selectedDevice && selectedTopicData && (
           <div className="mb-3">
             <Alert variant="info" className="mb-3">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <strong>{t('devices.title')}:</strong> {selectedDevice.name} ({selectedDevice.deviceId})
+                  <strong>{t('devices.title')}:</strong> {devices.state.selectedDevice.name} ({devices.state.selectedDevice.deviceId})
                   <br />
                   <strong>{t('mqtt.topics.title')}:</strong> {selectedTopicData.name}
                   <br />
-                  <small>{t('common.refresh')} {refreshInterval}s</small>
+                  <small>{t('common.refresh')} {topicMessages.state.refreshInterval}s</small>
                 </div>
                 <div style={{ minWidth: '140px' }}>
                   <Form.Label className="fw-bold small mb-1 d-block">{t('common.refresh')}:</Form.Label>
                   <Form.Select
                     size="sm"
-                    value={refreshInterval}
-                    onChange={(e) => setRefreshInterval(parseInt(e.target.value))}
+                    value={topicMessages.state.refreshInterval}
+                    onChange={(e) => topicMessages.actions.setRefreshInterval(parseInt(e.target.value))}
                   >
                     <option value={5}>5s</option>
                     <option value={15}>15s</option>
@@ -328,32 +231,36 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
         {selectedTopicData && (
           <div>
             <div className="d-flex justify-content-between align-items-center mb-3">
-              <h6 className="fw-bold mb-0">{t('mqtt.topics.messages')} ({messages.length})</h6>
+              <h6 className="fw-bold mb-0">{t('mqtt.topics.messages')} ({topicMessages.state.messageCount})</h6>
               <Button
                 variant="outline-secondary"
                 size="sm"
-                onClick={handleRefreshMessages}
-                disabled={loadingMessages}
+                onClick={() => {
+                  if (selectedTopicData?.id) {
+                    topicMessages.actions.loadTopicMessages(selectedTopicData.id);
+                  }
+                }}
+                disabled={topicMessages.state.isLoadingMessages}
               >
-                {loadingMessages ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
+                {topicMessages.state.isLoadingMessages ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
               </Button>
             </div>
 
             {/* Loading indicator - shown inline without hiding messages */}
-            {loadingMessages && (
+            {topicMessages.state.isLoadingMessages && (
               <div className="text-center py-2 mb-2 bg-light rounded">
                 <Spinner animation="border" size="sm" className="me-2" />
                 <small className="text-muted">{t('common.loading')}</small>
               </div>
             )}
 
-            {messages.length === 0 && !loadingMessages ? (
+            {!topicMessages.state.hasMessages && !topicMessages.state.isLoadingMessages ? (
               <Alert variant="info" className="text-center">
                 {t('mqtt.topics.noTopics')}
               </Alert>
             ) : (
               <ListGroup style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                {messages.map((message) => (
+                {topicMessages.state.messages.map((message) => (
                   <ListGroup.Item key={message.id} className="py-2">
                     <div className="d-flex justify-content-between align-items-start">
                       <div className="flex-grow-1">
@@ -361,7 +268,7 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
                           {new Date(message.createdAt).toLocaleString()}
                         </div>
                         <div className="small" style={{ wordBreak: 'break-word' }}>
-                          {formatPayload(message.payload)}
+                          {jsonFormatter.formatPayload(message.payload)}
                         </div>
                       </div>
                     </div>

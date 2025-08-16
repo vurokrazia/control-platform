@@ -40,7 +40,8 @@ export const useDevices = () => {
     actions: {
       loadAllDevices: devicesActions.loadAllDevices,
       setSelectedDevice: devicesActions.setSelectedDevice,
-      clearError: devicesActions.clearError
+      clearError: devicesActions.clearError,
+      handleDeviceSelection: devicesActions.handleDeviceSelection
     }
   };
 };

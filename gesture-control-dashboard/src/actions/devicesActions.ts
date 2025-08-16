@@ -57,5 +57,18 @@ export const devicesActions = {
   clearError(): ActionResult<void> {
     useDevicesStore.getState().clearError();
     return { success: true };
+  },
+
+  /**
+   * Handle device selection by device ID
+   */
+  handleDeviceSelection(devices: any[], deviceId: string): ActionResult<void> {
+    const device = devices.find(d => d.deviceId === deviceId);
+    const deviceToSet = device || null;
+    
+    const { setSelectedDevice } = useDevicesStore.getState();
+    setSelectedDevice(deviceToSet?.deviceId || null);
+    
+    return { success: true };
   }
 };

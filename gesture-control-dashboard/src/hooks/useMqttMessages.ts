@@ -37,7 +37,8 @@ export const useMqttMessages = () => {
       sendCustomMessage: mqttMessagesActions.sendCustomMessage,
       sendCommandWithSpeed: mqttMessagesActions.sendCommandWithSpeed,
       clearError: mqttMessagesActions.clearError,
-      clearLastMessage: mqttMessagesActions.clearLastMessage
+      clearLastMessage: mqttMessagesActions.clearLastMessage,
+      handleCustomFormSubmit: mqttMessagesActions.handleCustomFormSubmit
     }
   };
 };

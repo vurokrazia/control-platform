@@ -39,19 +39,6 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
     }
   }, [devices.state.selectedDevice]);
 
-  // Pure UI event handlers - no business logic
-  const handleDeviceChange = (deviceId: string) => {
-    const device = devices.state.devices.find(d => d.deviceId === deviceId);
-    devices.actions.setSelectedDevice(device || null);
-  };
-
-  const handleCustomSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (customMessage.trim()) {
-      messages.actions.sendCustomMessage(customMessage.trim(), () => setCustomMessage(''));
-    }
-  };
-
   // Computed values
   const isTopicSubscribed = topics.state.selectedTopic?.autoSubscribe === true;
 
@@ -114,7 +101,9 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
           </div>
           <Form.Select
             value={devices.state.selectedDevice?.deviceId || ''}
-            onChange={(e) => handleDeviceChange(e.target.value)}
+            onChange={(e) => {
+              devices.actions.handleDeviceSelection(devices.state.devices, e.target.value);
+            }}
             disabled={devices.state.isLoading || !devices.state.hasDevices}
           >
             {devices.state.isLoading ? (
@@ -228,7 +217,12 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
         {/* Custom Message Form */}
         <div>
           <h6 className="fw-bold mb-3">{t('mqtt.topics.message')}:</h6>
-          <Form onSubmit={handleCustomSubmit}>
+          <Form onSubmit={(e) => {
+            e.preventDefault();
+            if (customMessage.trim()) {
+              void messages.actions.handleCustomFormSubmit(customMessage.trim(), () => setCustomMessage(''));
+            }
+          }}>
             <InputGroup className="mb-3">
               <Form.Control
                 as="textarea"

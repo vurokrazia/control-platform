@@ -15,5 +15,8 @@ export { useMqttTopics } from './useMqttTopics';
 // MQTT Messages
 export { useMqttMessages } from './useMqttMessages';
 
+// Topic Messages
+export { useTopicMessages } from './useTopicMessages';
+
 // Future hooks will be exported here:
 // export { useUI } from './useUI';

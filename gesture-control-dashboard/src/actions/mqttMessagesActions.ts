@@ -131,5 +131,17 @@ export const mqttMessagesActions = {
       lastTopic: null 
     });
     return { success: true };
+  },
+
+  /**
+   * Handle custom form submission with message clearing
+   */
+  async handleCustomFormSubmit(message: string, clearCallback: () => void): Promise<ActionResult<void>> {
+    if (!message.trim()) {
+      return { success: false, error: 'Message cannot be empty' };
+    }
+
+    const result = await mqttMessagesActions.sendCustomMessage(message.trim(), clearCallback);
+    return result;
   }
 };
