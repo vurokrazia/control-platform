@@ -39,8 +39,8 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
     }
   }, [devices.state.selectedDevice]);
 
-  // Computed values
-  const isTopicSubscribed = topics.state.selectedTopic?.autoSubscribe === true;
+  // Always enable buttons - ignore autoSubscribe logic
+  const isTopicSubscribed = true;
 
   return (
     <Card>
