@@ -206,21 +206,38 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
                   <br />
                   <strong>{t('mqtt.topics.titleCommands')}:</strong> {selectedTopicData.name}
                   <div className="mt-2 d-flex align-items-center gap-2">
+                    <span className={`badge ${selectedTopicData.autoSubscribe ? 'bg-success' : 'bg-warning text-dark'}`}>
+                      {selectedTopicData.autoSubscribe ? `📡 ${t('mqtt.topics.subscriptionStatus.auto')}` : `⚠️ ${t('mqtt.topics.subscriptionStatus.manual')}`}
+                    </span>
                     <Button
-                      variant="success"
+                      variant={selectedTopicData.autoSubscribe ? "outline-warning" : "outline-success"}
                       size="sm"
+                      onClick={async () => {
+                        if (selectedTopicData.id) {
+                          const result = await topics.actions.updateTopic(selectedTopicData.id, !selectedTopicData.autoSubscribe);
+                          if (result.success) {
+                            // Update local state to reflect the change
+                            setSelectedTopicData({ ...selectedTopicData, autoSubscribe: !selectedTopicData.autoSubscribe });
+                            // Reload topics to sync with server
+                            if (devices.state.selectedDevice) {
+                              void topics.actions.loadTopicsByDevice(devices.state.selectedDevice.deviceId);
+                            }
+                          }
+                        }
+                      }}
                       disabled={false}
-                      title="Send command to topic"
+                      title={selectedTopicData.autoSubscribe ? 'Disable auto-subscribe' : 'Enable auto-subscribe'}
                     >
-                      📡 {t('mqtt.topics.publish')}
-                    </Button>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      disabled={false}
-                      title="Subscribe to topic"
-                    >
-                      🔔 {t('mqtt.topics.subscribe')}
+                      {topics.state.loading.updating ? (
+                        <>
+                          <Spinner size="sm" className="me-1" />
+                          {t('common.loading')}
+                        </>
+                      ) : selectedTopicData.autoSubscribe ? (
+                        <>🔕 {t('mqtt.topics.unsubscribe')}</>
+                      ) : (
+                        <>📡 {t('mqtt.topics.subscribe')}</>
+                      )}
                     </Button>
                   </div>
                   <small className="text-muted">{t('common.refresh')} {topicMessages.state.refreshInterval}s</small>
