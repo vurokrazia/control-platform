@@ -33,6 +33,19 @@ api.interceptors.response.use(
   },
   (error) => {
     console.error('❌ MQTT Response error:', error.response?.data || error.message);
+    
+    // Handle authentication errors
+    if (error.response?.status === 401) {
+      console.error('🔒 Authentication failed - redirecting to login');
+      localStorage.removeItem('auth_token');
+      window.location.href = '/login';
+    }
+    
+    // Handle validation errors
+    if (error.response?.status === 400 && error.response?.data?.details) {
+      console.error('⚠️ Validation error:', error.response.data.details);
+    }
+    
     return Promise.reject(error);
   }
 );
@@ -42,6 +55,7 @@ export interface MqttTopic {
   id?: string;
   name: string;
   deviceId: string;
+  autoSubscribe: boolean;
   createdAt: Date | string;
 }
 
@@ -91,9 +105,9 @@ class MqttTopicsRepository {
   }
 
   // Create new MQTT topic
-  async createTopic(name: string, deviceId: string): Promise<MqttTopic> {
+  async createTopic(name: string, deviceId: string, autoSubscribe: boolean = true): Promise<MqttTopic> {
     try {
-      const response = await api.post<ApiResponse<MqttTopic>>('/v1/mqtt-topics', { name, deviceId });
+      const response = await api.post<ApiResponse<MqttTopic>>('/v1/mqtt-topics', { name, deviceId, autoSubscribe });
 
       if (response.data.success && response.data.data) {
         return response.data.data;
@@ -106,6 +120,26 @@ class MqttTopicsRepository {
         axios.isAxiosError(error) && error.response?.data?.error
           ? error.response.data.error
           : 'Connection error when creating MQTT topic'
+      );
+    }
+  }
+
+  // Update MQTT topic
+  async updateTopic(topicId: string, autoSubscribe: boolean): Promise<MqttTopic> {
+    try {
+      const response = await api.put<ApiResponse<MqttTopic>>(`/v1/mqtt-topics/${topicId}`, { autoSubscribe });
+
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
+
+      throw new Error(response.data.error || 'Error updating MQTT topic');
+    } catch (error) {
+      console.error('Error updating MQTT topic:', error);
+      throw new Error(
+        axios.isAxiosError(error) && error.response?.data?.error
+          ? error.response.data.error
+          : 'Connection error when updating MQTT topic'
       );
     }
   }

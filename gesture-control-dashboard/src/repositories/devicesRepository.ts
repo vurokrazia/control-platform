@@ -33,6 +33,19 @@ api.interceptors.response.use(
   },
   (error) => {
     console.error('❌ Devices Response error:', error.response?.data || error.message);
+    
+    // Handle authentication errors
+    if (error.response?.status === 401) {
+      console.error('🔒 Authentication failed - redirecting to login');
+      localStorage.removeItem('auth_token');
+      window.location.href = '/login';
+    }
+    
+    // Handle validation errors
+    if (error.response?.status === 400 && error.response?.data?.details) {
+      console.error('⚠️ Validation error:', error.response.data.details);
+    }
+    
     return Promise.reject(error);
   }
 );
