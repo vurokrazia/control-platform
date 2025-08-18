@@ -9,6 +9,8 @@ interface MqttTopicsState {
   selectedTopicId: string | null;
   messages: TopicMessage[];
   error: string | null;
+  lastLoadedDeviceId: string | null;
+  lastLoadedTime: Date | null;
   
   // Simple state setters only
   clearError: () => void;
@@ -27,6 +29,8 @@ export const useMqttTopicsStore = create<MqttTopicsState>()(
         selectedTopicId: null,
         messages: [],
         error: null,
+        lastLoadedDeviceId: null,
+        lastLoadedTime: null,
 
         // Simple state setters only
         clearError: () => {

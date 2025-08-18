@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Nav, Navbar, Button, Dropdown } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from './LanguageSelector';
+import { useDevices, useMqttTopics, useTopicMessages } from '../hooks';
 
 // Existing components
 import HandTracker from './HandTracker';
@@ -27,6 +28,24 @@ export const ControlPage: React.FC<ControlPageProps> = ({
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'hands' | 'arduino' | 'mqtt'>(initialTab);
   const [showMqttModal, setShowMqttModal] = useState(false);
+  
+  // Load shared data once at page level to prevent duplicate calls from child components
+  const devices = useDevices();
+  const topics = useMqttTopics();
+  const topicMessages = useTopicMessages();
+  
+  useEffect(() => {
+    console.log('🏗️ ControlPage: Loading devices once at page level');
+    devices.actions.loadAllDevices();
+  }, []);
+
+  // Load topics when selected device changes
+  useEffect(() => {
+    if (devices.state.selectedDevice) {
+      console.log('🏗️ ControlPage: Loading topics for device', devices.state.selectedDevice.deviceId);
+      topics.actions.loadTopicsByDevice(devices.state.selectedDevice.deviceId);
+    }
+  }, [devices.state.selectedDevice?.deviceId]);
 
   const handleLogout = async () => {
     await logout();
@@ -131,11 +150,25 @@ export const ControlPage: React.FC<ControlPageProps> = ({
           <Row className="g-4">
             {/* MQTT Connection */}
             <Col lg={6}>
-              <MqttConnection />
+              <MqttConnection 
+                devices={devices.state.devices}
+                selectedDevice={devices.state.selectedDevice}
+                isLoading={devices.state.isLoading}
+                error={devices.state.error}
+                onDeviceSelect={devices.actions.setSelectedDevice}
+                onRefresh={() => devices.actions.loadAllDevices(true)}
+              />
             </Col>
             {/* MQTT Control Panel */}
             <Col lg={6}>
-              <MqttDashboard />
+              <MqttDashboard 
+                devices={devices.state.devices}
+                selectedDevice={devices.state.selectedDevice}
+                isLoading={devices.state.isLoading}
+                error={devices.state.error}
+                onDeviceSelect={devices.actions.setSelectedDevice}
+                onRefresh={() => devices.actions.loadAllDevices(true)}
+              />
             </Col>
           </Row>
         ) : (
@@ -151,6 +184,12 @@ export const ControlPage: React.FC<ControlPageProps> = ({
       <MqttTopicsModal 
         isOpen={showMqttModal}
         onClose={() => setShowMqttModal(false)}
+        devices={devices.state.devices}
+        selectedDevice={devices.state.selectedDevice}
+        isLoading={devices.state.isLoading}
+        error={devices.state.error}
+        onDeviceSelect={devices.actions.setSelectedDevice}
+        onRefresh={() => devices.actions.loadAllDevices(true)}
       />
     </div>
   );

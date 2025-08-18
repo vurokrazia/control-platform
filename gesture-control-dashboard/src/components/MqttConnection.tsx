@@ -1,36 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Button, Alert, Badge, Row, Col, ListGroup, Spinner } from 'react-bootstrap';
-import { useDevices, useMqttTopics, useTopicMessages } from '../hooks';
+import { Card, Form, Button, Alert, Badge, ListGroup, Spinner } from 'react-bootstrap';
+import { useMqttTopics, useTopicMessages } from '../hooks';
 import { useTranslation } from 'react-i18next';
 import { jsonFormatter } from '../utils/jsonFormatter';
 import type { MqttTopic } from '../repositories/mqttTopicsRepository';
+import type { Device } from '../repositories/devicesRepository';
 
 interface MqttConnectionProps {
-  // No props needed - this component manages its own topic selection
+  devices: Device[];
+  selectedDevice: Device | null;
+  isLoading: boolean;
+  error: string | null;
+  onDeviceSelect: (device: Device | null) => void;
+  onRefresh: () => void;
 }
 
-const MqttConnection: React.FC<MqttConnectionProps> = () => {
+const MqttConnection: React.FC<MqttConnectionProps> = ({
+  devices,
+  selectedDevice,
+  isLoading,
+  error,
+  onDeviceSelect,
+  onRefresh
+}) => {
   const { t } = useTranslation();
   
-  // 3-layer architecture hooks
-  const devices = useDevices();
+  // Hooks for topics and messages - now topics loading is managed by parent
   const topics = useMqttTopics();
   const topicMessages = useTopicMessages();
   
   // Local UI state only
   const [selectedTopicData, setSelectedTopicData] = useState<MqttTopic | null>(null);
 
-  useEffect(() => {
-    devices.actions.loadAllDevices();
-  }, []);
+  // Removed: Device loading moved to parent ControlPage to prevent duplicate calls
+  // Removed: Topic loading moved to parent ControlPage to prevent duplicate calls
 
   useEffect(() => {
-    if (devices.state.selectedDevice) {
-      topics.actions.loadTopicsByDevice(devices.state.selectedDevice.deviceId);
-    } else {
+    if (!selectedDevice) {
       setSelectedTopicData(null);
     }
-  }, [devices.state.selectedDevice]);
+  }, [selectedDevice?.deviceId]); // Reset topic selection when device changes
 
   useEffect(() => {
     if (selectedTopicData?.id) {
@@ -44,7 +53,7 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
     return () => {
       void topicMessages.actions.stopMessageAutoRefresh();
     };
-  }, [selectedTopicData, topicMessages.state.refreshInterval]);
+  }, [selectedTopicData?.id, topicMessages.state.refreshInterval]); // Use stable ID instead of full object
 
   useEffect(() => {
     if (topicMessages.state.deviceAutoRefresh) {
@@ -74,13 +83,13 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
         </Badge>
       </Card.Header>
       <Card.Body>
-        {(devices.state.error || topics.state.error || topicMessages.state.error) && (
+        {(error || topics.state.error || topicMessages.state.error) && (
           <Alert variant="danger" dismissible onClose={() => {
-            devices.actions.clearError();
+            // Note: devices error clearing is handled by parent
             topics.actions.clearError();
             topicMessages.actions.clearError();
           }}>
-            {devices.state.error || topics.state.error || topicMessages.state.error}
+            {error || topics.state.error || topicMessages.state.error}
           </Alert>
         )}
 
@@ -101,35 +110,32 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
                 variant="outline-secondary"
                 size="sm"
                 onClick={() => {
-                  devices.actions.loadAllDevices();
+                  onRefresh(); // Force refresh when manually clicked
                   topicMessages.actions.updateLastDeviceUpdate();
                 }}
-                disabled={devices.state.isLoading}
+                disabled={isLoading}
               >
-                {devices.state.isLoading ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
+                {isLoading ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
               </Button>
             </div>
           </div>
           <Form.Select
-            value={devices.state.selectedDevice?.deviceId || ''}
+            value={selectedDevice?.deviceId || ''}
             onChange={(e) => {
-              topicMessages.actions.handleDeviceSelection(
-                devices.state.devices,
-                e.target.value,
-                devices.actions.setSelectedDevice,
-                () => setSelectedTopicData(null)
-              );
+              const device = devices.find(d => d.deviceId === e.target.value) || null;
+              onDeviceSelect(device);
+              setSelectedTopicData(null); // Reset topic selection when device changes
             }}
-            disabled={devices.state.isLoading || !devices.state.hasDevices}
+            disabled={isLoading || devices.length === 0}
           >
-            {devices.state.isLoading ? (
+            {isLoading ? (
               <option>{t('common.loading')}</option>
-            ) : !devices.state.hasDevices ? (
+            ) : devices.length === 0 ? (
               <option>{t('devices.noDevices')}</option>
             ) : (
               <>
                 <option value="">{t('mqtt.modal.selectDevice')}</option>
-                {devices.state.devices.map((device) => (
+                {devices.map((device) => (
                   <option key={device.deviceId} value={device.deviceId}>
                     {device.name} ({device.deviceId})
                   </option>
@@ -148,7 +154,7 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
         </Form.Group>
 
         {/* Topic Selection - Only show if device is selected */}
-        {devices.state.selectedDevice && (
+        {selectedDevice && (
           <Form.Group className="mb-3">
             <div className="d-flex justify-content-between align-items-center mb-2">
               <Form.Label className="fw-bold mb-0">{t('mqtt.topics.title')}:</Form.Label>
@@ -156,8 +162,8 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
                 variant="outline-secondary"
                 size="sm"
                 onClick={() => {
-                  if (devices.state.selectedDevice) {
-                    topics.actions.loadTopicsByDevice(devices.state.selectedDevice.deviceId);
+                  if (selectedDevice) {
+                    topics.actions.loadTopicsByDevice(selectedDevice.deviceId, true); // Force refresh
                   }
                 }}
                 disabled={topics.state.loading.topics}
@@ -197,12 +203,12 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
           </Form.Group>
         )}
 
-        {devices.state.selectedDevice && selectedTopicData && (
+        {selectedDevice && selectedTopicData && (
           <div className="mb-3">
             <Alert variant="info" className="mb-3">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <strong>{t('devices.title')}:</strong> {devices.state.selectedDevice.name} ({devices.state.selectedDevice.deviceId})
+                  <strong>{t('devices.title')}:</strong> {selectedDevice.name} ({selectedDevice.deviceId})
                   <br />
                   <strong>{t('mqtt.topics.titleCommands')}:</strong> {selectedTopicData.name}
                   <div className="mt-2 d-flex align-items-center gap-2">
@@ -219,8 +225,8 @@ const MqttConnection: React.FC<MqttConnectionProps> = () => {
                             // Update local state to reflect the change
                             setSelectedTopicData({ ...selectedTopicData, autoSubscribe: !selectedTopicData.autoSubscribe });
                             // Reload topics to sync with server
-                            if (devices.state.selectedDevice) {
-                              void topics.actions.loadTopicsByDevice(devices.state.selectedDevice.deviceId);
+                            if (selectedDevice) {
+                              void topics.actions.loadTopicsByDevice(selectedDevice.deviceId, true);
                             }
                           }
                         }

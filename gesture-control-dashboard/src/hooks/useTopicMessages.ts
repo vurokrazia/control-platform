@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useTopicMessagesStore } from '../stores/topicMessagesStore';
 import { useUiStore } from '../stores/uiStore';
 import { topicMessagesActions } from '../actions/topicMessagesActions';
@@ -20,41 +21,52 @@ export const useTopicMessages = () => {
   // UI state selectors
   const isLoadingMessages = useUiStore(state => state.loading.messages);
 
-  // Computed state - derived values
-  const hasMessages = messages.length > 0;
-  const messageCount = messages.length;
+  // Memoize the return object to prevent new references on every render
+  return useMemo(() => {
+    // Computed state - derived values (computed inside useMemo)
+    const hasMessages = messages.length > 0;
+    const messageCount = messages.length;
 
-  return {
-    // STATE - Everything the component needs to render
-    state: {
-      messages,
-      selectedTopicId,
-      refreshInterval,
-      deviceAutoRefresh,
-      lastDeviceUpdate,
-      isLoadingMessages,
-      error,
-      // Computed values
-      hasMessages,
-      messageCount
-    },
+    return {
+      // STATE - Everything the component needs to render
+      state: {
+        messages,
+        selectedTopicId,
+        refreshInterval,
+        deviceAutoRefresh,
+        lastDeviceUpdate,
+        isLoadingMessages,
+        error,
+        // Computed values
+        hasMessages,
+        messageCount
+      },
 
-    // ACTIONS - Clean function references (no business logic)
-    actions: {
-      loadTopicMessages: topicMessagesActions.loadTopicMessages,
-      setRefreshInterval: topicMessagesActions.setRefreshInterval,
-      setDeviceAutoRefresh: topicMessagesActions.setDeviceAutoRefresh,
-      updateLastDeviceUpdate: topicMessagesActions.updateLastDeviceUpdate,
-      clearError: topicMessagesActions.clearError,
-      clearMessages: topicMessagesActions.clearMessages,
-      // Auto-refresh actions
-      startMessageAutoRefresh: autoRefreshActions.startMessageAutoRefresh,
-      stopMessageAutoRefresh: autoRefreshActions.stopMessageAutoRefresh,
-      startDeviceAutoRefresh: autoRefreshActions.startDeviceAutoRefresh,
-      stopDeviceAutoRefresh: autoRefreshActions.stopDeviceAutoRefresh,
-      handleDeviceSelection: autoRefreshActions.handleDeviceSelection,
-      handleTopicSelection: autoRefreshActions.handleTopicSelection,
-      cleanupAllIntervals: autoRefreshActions.cleanupAllIntervals
-    }
-  };
+      // ACTIONS - Clean function references (no business logic)
+      actions: {
+        loadTopicMessages: topicMessagesActions.loadTopicMessages,
+        setRefreshInterval: topicMessagesActions.setRefreshInterval,
+        setDeviceAutoRefresh: topicMessagesActions.setDeviceAutoRefresh,
+        updateLastDeviceUpdate: topicMessagesActions.updateLastDeviceUpdate,
+        clearError: topicMessagesActions.clearError,
+        clearMessages: topicMessagesActions.clearMessages,
+        // Auto-refresh actions
+        startMessageAutoRefresh: autoRefreshActions.startMessageAutoRefresh,
+        stopMessageAutoRefresh: autoRefreshActions.stopMessageAutoRefresh,
+        startDeviceAutoRefresh: autoRefreshActions.startDeviceAutoRefresh,
+        stopDeviceAutoRefresh: autoRefreshActions.stopDeviceAutoRefresh,
+        handleDeviceSelection: autoRefreshActions.handleDeviceSelection,
+        handleTopicSelection: autoRefreshActions.handleTopicSelection,
+        cleanupAllIntervals: autoRefreshActions.cleanupAllIntervals
+      }
+    };
+  }, [
+    messages, 
+    selectedTopicId, 
+    refreshInterval, 
+    deviceAutoRefresh, 
+    lastDeviceUpdate, 
+    isLoadingMessages, 
+    error
+  ]); // Stable dependencies
 };

@@ -9,6 +9,7 @@ interface DevicesState {
   selectedDeviceId: string | null;
   loading: boolean;
   error: string | null;
+  lastLoaded: Date | null;
   
   // Computed getters
   selectedDevice: () => Device | null;
@@ -41,6 +42,7 @@ export const useDevicesStore = create<DevicesState>()(
         selectedDeviceId: null,
         loading: false,
         error: null,
+        lastLoaded: null,
 
         // Computed getters - automatically memoized
         selectedDevice: () => {
@@ -61,12 +63,30 @@ export const useDevicesStore = create<DevicesState>()(
         // Actions
         /**
          * Load all devices for the authenticated user
+         * Includes smart caching to prevent excessive API calls
          */
-        loadDevices: async () => {
+        loadDevices: async (force: boolean = false) => {
+          const { lastLoaded, loading } = get();
+          
+          // Skip if already loading
+          if (loading && !force) {
+            console.log('🚫 Skipping device load - already in progress');
+            return;
+          }
+          
+          // Skip if loaded recently (within 30 seconds) unless forced
+          if (!force && lastLoaded) {
+            const timeSinceLoad = Date.now() - lastLoaded.getTime();
+            if (timeSinceLoad < 30000) {
+              console.log(`🚫 Skipping device load - loaded ${Math.round(timeSinceLoad/1000)}s ago`);
+              return;
+            }
+          }
+          
           set({ loading: true, error: null });
           try {
             const devices = await devicesRepository.getAllDevices();
-            set({ devices, loading: false });
+            set({ devices, loading: false, lastLoaded: new Date() });
           } catch (error) {
             set({ 
               error: error instanceof Error ? error.message : 'Failed to load devices',

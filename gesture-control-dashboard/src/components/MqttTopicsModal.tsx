@@ -1,20 +1,35 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Form, Alert, ListGroup, Spinner, InputGroup, Row, Col } from 'react-bootstrap';
-import { useDevices, useMqttTopics } from '../hooks';
+import { useMqttTopics } from '../hooks';
 import { DeviceCreateModal } from './DeviceCreateModal';
 import { useTranslation } from 'react-i18next';
 import { MqttTopic } from '../repositories/mqttTopicsRepository';
+import type { Device } from '../repositories/devicesRepository';
 
 interface MqttTopicsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  devices: Device[];
+  selectedDevice: Device | null;
+  isLoading: boolean;
+  error: string | null;
+  onDeviceSelect: (device: Device | null) => void;
+  onRefresh: () => void;
 }
 
-export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClose }) => {
+export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ 
+  isOpen, 
+  onClose,
+  devices,
+  selectedDevice,
+  isLoading,
+  error,
+  onDeviceSelect,
+  onRefresh
+}) => {
   const { t } = useTranslation();
   
-  // 3-layer architecture hooks
-  const devices = useDevices();
+  // Hooks for topics only
   const topics = useMqttTopics();
   
   // Local UI state only
@@ -24,28 +39,19 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
   const [showDeviceModal, setShowDeviceModal] = useState(false);
   const [editingTopic, setEditingTopic] = useState<MqttTopic | null>(null);
 
-  // Load devices when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      void devices.actions.loadAllDevices();
-    }
-  }, [isOpen]);
+  // Removed: Device loading moved to parent level to prevent duplicate calls
+  // Devices are now loaded once at the app/page level
 
-  // Load topics when device changes
-  useEffect(() => {
-    if (isOpen && devices.state.selectedDevice) {
-      void topics.actions.loadTopicsByDevice(devices.state.selectedDevice.deviceId);
-    }
-  }, [isOpen, devices.state.selectedDevice?.deviceId]);
+  // Removed: Topic loading moved to parent ControlPage to prevent duplicate calls
 
   // Pure UI event handlers - no business logic
   const handleCreateTopic = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTopicName.trim() || !devices.state.selectedDevice) return;
+    if (!newTopicName.trim() || !selectedDevice) return;
 
     const result = await topics.actions.createTopic(
       newTopicName.trim(), 
-      devices.state.selectedDevice.deviceId, 
+      selectedDevice.deviceId, 
       autoSubscribe
     );
     
@@ -89,12 +95,12 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
           <Modal.Title>📡 {t('mqtt.modal.title')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {(devices.state.error || topics.state.error) && (
+          {(error || topics.state.error) && (
             <Alert variant="danger" dismissible onClose={() => {
-              devices.actions.clearError();
+              // Note: devices error clearing is handled by parent
               topics.actions.clearError();
             }}>
-              {devices.state.error || topics.state.error}
+              {error || topics.state.error}
             </Alert>
           )}
 
@@ -102,15 +108,15 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
           <div className="mb-4">
             <Form.Label className="fw-bold">{t('mqtt.modal.deviceSelection')}</Form.Label>
             <Form.Select
-              value={devices.state.selectedDevice?.deviceId || ''}
+              value={selectedDevice?.deviceId || ''}
               onChange={(e) => {
-                const device = devices.state.devices.find(d => d.deviceId === e.target.value);
-                devices.actions.setSelectedDevice(device || null);
+                const device = devices.find(d => d.deviceId === e.target.value);
+                onDeviceSelect(device || null);
               }}
-              disabled={devices.state.isLoading}
+              disabled={isLoading}
             >
               <option value="">{t('mqtt.modal.selectDevice')}</option>
-              {devices.state.devices.map((device) => (
+              {devices.map((device) => (
                 <option key={device.deviceId} value={device.deviceId}>
                   {device.name} ({device.deviceId})
                 </option>
@@ -122,7 +128,7 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
           </div>
 
           {/* Create new topic form - Only show if device is selected */}
-          {devices.state.selectedDevice && (
+          {selectedDevice && (
             <Form onSubmit={handleCreateTopic} className="mb-4">
               <Form.Label className="fw-bold">{t('mqtt.topics.addTopic')}</Form.Label>
               
@@ -160,23 +166,23 @@ export const MqttTopicsModal: React.FC<MqttTopicsModalProps> = ({ isOpen, onClos
               />
               
               <Form.Text className="text-muted">
-                {t('mqtt.modal.helpText')}: {devices.state.selectedDevice?.name || devices.state.selectedDevice?.deviceId}
+                {t('mqtt.modal.helpText')}: {selectedDevice?.name || selectedDevice?.deviceId}
               </Form.Text>
             </Form>
           )}
 
           {/* Message when no device selected */}
-          {!devices.state.selectedDevice && (
+          {!selectedDevice && (
             <Alert variant="info" className="mb-4">
               <strong>{t('mqtt.modal.selectDevice')}</strong>
             </Alert>
           )}
 
           {/* Topics list - Only show if device is selected */}
-          {devices.state.selectedDevice && (
+          {selectedDevice && (
             <>
               <h6 className="fw-bold mb-3">
-                {t('mqtt.topics.title')} {devices.state.selectedDevice?.name || devices.state.selectedDevice?.deviceId}
+                {t('mqtt.topics.title')} {selectedDevice?.name || selectedDevice?.deviceId}
               </h6>
               {topics.state.loading.topics ? (
                 <div className="text-center py-4">

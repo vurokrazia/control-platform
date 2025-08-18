@@ -1,19 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Button, Form, Alert, InputGroup } from 'react-bootstrap';
-import { useDevices, useMqttTopics, useMqttMessages } from '../hooks';
+import { useMqttTopics, useMqttMessages } from '../hooks';
 import { useTranslation } from 'react-i18next';
+import type { Device } from '../repositories/devicesRepository';
 
 interface MqttDashboardProps {
-  // No props needed - this component manages its own topic selection
+  devices: Device[];
+  selectedDevice: Device | null;
+  isLoading: boolean;
+  error: string | null;
+  onDeviceSelect: (device: Device | null) => void;
+  onRefresh: () => void;
 }
 
-const MqttDashboard: React.FC<MqttDashboardProps> = () => {
+const MqttDashboard: React.FC<MqttDashboardProps> = ({
+  devices,
+  selectedDevice,
+  isLoading,
+  error,
+  onDeviceSelect,
+  onRefresh
+}) => {
   const { t } = useTranslation();
   const [customMessage, setCustomMessage] = useState('');
   const [speed, setSpeed] = useState(150);
   
-  // 3-layer architecture hooks
-  const devices = useDevices();
+  // Hooks for topics and messages only
   const topics = useMqttTopics();
   const messages = useMqttMessages();
 
@@ -29,15 +41,8 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
     { label: '📡 ' + t('mqtt.connection.status'), command: 'STATUS', useSpeed: false, fixedSpeed: 0 },
   ];
 
-  useEffect(() => {
-    devices.actions.loadAllDevices();
-  }, []);
-
-  useEffect(() => {
-    if (devices.state.selectedDevice) {
-      topics.actions.loadTopicsByDevice(devices.state.selectedDevice.deviceId);
-    }
-  }, [devices.state.selectedDevice]);
+  // Removed: Device loading moved to parent ControlPage to prevent duplicate calls
+  // Removed: Topic loading moved to parent ControlPage to prevent duplicate calls
 
   // Always enable buttons - ignore autoSubscribe logic
   const isTopicSubscribed = true;
@@ -45,16 +50,16 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
   return (
     <Card>
       <Card.Header className="bg-info text-white">
-        <h5 className="mb-0">📡 {t('mqtt.connection.title')}</h5>
+        <h5 className="mb-0">📡 {t('mqtt.connection.titleCommands')}</h5>
       </Card.Header>
       <Card.Body>
-        {(devices.state.error || topics.state.error || messages.state.error) && (
+        {(error || topics.state.error || messages.state.error) && (
           <Alert variant="danger" dismissible onClose={() => {
-            devices.actions.clearError();
+            // Note: devices error clearing is handled by parent
             topics.actions.clearError();
             messages.actions.clearError();
           }}>
-            {devices.state.error || topics.state.error || messages.state.error}
+            {error || topics.state.error || messages.state.error}
           </Alert>
         )}
 
@@ -67,13 +72,13 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
           </Alert>
         )}
 
-        {!devices.state.selectedDevice && (
+        {!selectedDevice && (
           <Alert variant="warning" className="mb-3">
             {t('mqtt.modal.selectDevice')}
           </Alert>
         )}
 
-        {!topics.state.selectedTopic && devices.state.selectedDevice && (
+        {!topics.state.selectedTopic && selectedDevice && (
           <Alert variant="warning" className="mb-3">
             {t('mqtt.topics.addTopic')}
           </Alert>
@@ -93,27 +98,28 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
             <Button
               variant="outline-secondary"
               size="sm"
-              onClick={devices.actions.loadAllDevices}
-              disabled={devices.state.isLoading}
+              onClick={onRefresh}
+              disabled={isLoading}
             >
-              {devices.state.isLoading ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
+              {isLoading ? '🔄 ' + t('common.loading') : '🔄 ' + t('common.refresh')}
             </Button>
           </div>
           <Form.Select
-            value={devices.state.selectedDevice?.deviceId || ''}
+            value={selectedDevice?.deviceId || ''}
             onChange={(e) => {
-              devices.actions.handleDeviceSelection(devices.state.devices, e.target.value);
+              const device = devices.find(d => d.deviceId === e.target.value) || null;
+              onDeviceSelect(device);
             }}
-            disabled={devices.state.isLoading || !devices.state.hasDevices}
+            disabled={isLoading || devices.length === 0}
           >
-            {devices.state.isLoading ? (
+            {isLoading ? (
               <option>{t('common.loading')}</option>
-            ) : !devices.state.hasDevices ? (
+            ) : devices.length === 0 ? (
               <option>{t('devices.noDevices')}</option>
             ) : (
               <>
                 <option value="">{t('mqtt.modal.selectDevice')}</option>
-                {devices.state.devices.map((device) => (
+                {devices.map((device) => (
                   <option key={device.deviceId} value={device.deviceId}>
                     {device.name} ({device.deviceId})
                   </option>
@@ -127,7 +133,7 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
         </div>
 
         {/* Topic Selection - Only show if device is selected */}
-        {devices.state.selectedDevice && (
+        {selectedDevice && (
           <div className="mb-4">
             <div className="d-flex justify-content-between align-items-center mb-2">
               <Form.Label className="fw-bold mb-0">{t('mqtt.topics.title')}:</Form.Label>
@@ -135,8 +141,8 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
                 variant="outline-secondary"
                 size="sm"
                 onClick={() => {
-                  if (devices.state.selectedDevice) {
-                    topics.actions.loadTopicsByDevice(devices.state.selectedDevice.deviceId);
+                  if (selectedDevice) {
+                    topics.actions.loadTopicsByDevice(selectedDevice.deviceId, true); // Force refresh
                   }
                 }}
                 disabled={topics.state.loading.topics}
@@ -191,9 +197,9 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
         </div>
 
         {/* Predefined Command Buttons - Only show if device and topic are selected */}
-        {devices.state.selectedDevice && topics.state.selectedTopic && (
+        {selectedDevice && topics.state.selectedTopic && (
           <div className="mb-4">
-            <h6 className="fw-bold mb-3">{t('common.actions')} {devices.state.selectedDevice.name}:</h6>
+            <h6 className="fw-bold mb-3">{t('common.actions')} {selectedDevice.name}:</h6>
             <Row className="g-2">
               {predefinedCommands.map((cmd, index) => (
                 <Col key={index} xs={12} sm={6} md={4} lg={3}>
@@ -201,7 +207,9 @@ const MqttDashboard: React.FC<MqttDashboardProps> = () => {
                     variant="outline-primary"
                     size="sm"
                     className="w-100"
-                    onClick={() => messages.actions.sendCommandWithSpeed(cmd.command, cmd.useSpeed, speed, cmd.fixedSpeed)}
+                    onClick={() => {
+                      messages.actions.sendCommandWithSpeed(cmd.command, cmd.useSpeed, speed, cmd.fixedSpeed);
+                    }}
                     disabled={messages.state.isPublishing || !isTopicSubscribed}
                   >
                     {cmd.label}

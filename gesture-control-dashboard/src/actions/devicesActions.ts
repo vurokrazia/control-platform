@@ -18,24 +18,23 @@ export const devicesActions = {
   /**
    * Load all devices for authenticated user
    */
-  async loadAllDevices(): Promise<ActionResult<Device[]>> {
+  async loadAllDevices(force: boolean = false): Promise<ActionResult<Device[]>> {
     const { setDevicesLoading } = useUiStore.getState();
-    const { clearError } = useDevicesStore.getState();
+    const { loadDevices } = useDevicesStore.getState();
     
     setDevicesLoading(true);
-    clearError();
     
     try {
-      const devices = await devicesRepository.getAllDevices();
-      
-      // Update store state
-      useDevicesStore.setState({ devices });
+      await loadDevices(force);
+      const devices = useDevicesStore.getState().devices;
+      console.log(`✅ Loaded ${devices.length} devices`);
       
       setDevicesLoading(false);
       return { success: true, data: devices };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load devices';
-      useDevicesStore.setState({ error: errorMessage });
+      console.error('❌ Error loading devices:', errorMessage);
+      
       setDevicesLoading(false);
       
       return { success: false, error: errorMessage };

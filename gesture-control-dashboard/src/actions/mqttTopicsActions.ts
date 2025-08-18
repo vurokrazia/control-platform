@@ -43,28 +43,50 @@ export const mqttTopicsActions = {
   },
 
   /**
-   * Load topics for a specific device
+   * Load topics for a specific device with smart caching
    */
-  async loadTopicsByDevice(deviceId: string): Promise<ActionResult<MqttTopic[]>> {
+  async loadTopicsByDevice(deviceId: string, force: boolean = false): Promise<ActionResult<MqttTopic[]>> {
     if (!deviceId.trim()) {
       return { success: false, error: 'Device ID is required' };
     }
 
     const { setTopicsLoading } = useUiStore.getState();
+    const { lastLoadedDeviceId, lastLoadedTime } = useMqttTopicsStore.getState();
+    
+    // Skip if already loaded recently for the same device (within 30 seconds) unless forced
+    if (!force && lastLoadedDeviceId === deviceId && lastLoadedTime) {
+      const timeSinceLoad = Date.now() - lastLoadedTime.getTime();
+      if (timeSinceLoad < 30000) {
+        console.log(`🚫 Skipping topics load for device ${deviceId} - loaded ${Math.round(timeSinceLoad/1000)}s ago`);
+        const topics = useMqttTopicsStore.getState().topics;
+        return { success: true, data: topics };
+      }
+    }
+
+    // If device changed, clear existing topics immediately for UI responsiveness
+    if (lastLoadedDeviceId !== deviceId) {
+      useMqttTopicsStore.setState({ topics: [] });
+    }
     
     setTopicsLoading(true);
     useMqttTopicsStore.setState({ error: null });
     
     try {
       const topics = await mqttTopicsRepository.getDeviceTopics(deviceId);
+      console.log(`✅ Loaded ${topics.length} topics for device ${deviceId}`);
       
-      // Simple state update - just replace all topics
-      useMqttTopicsStore.setState({ topics });
+      // Update state with caching info
+      useMqttTopicsStore.setState({ 
+        topics, 
+        lastLoadedDeviceId: deviceId,
+        lastLoadedTime: new Date()
+      });
       
       setTopicsLoading(false);
       return { success: true, data: topics };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load device topics';
+      console.error('❌ Error loading topics:', errorMessage);
       useMqttTopicsStore.setState({ error: errorMessage });
       setTopicsLoading(false);
       

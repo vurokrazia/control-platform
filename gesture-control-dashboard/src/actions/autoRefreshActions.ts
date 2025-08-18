@@ -53,16 +53,10 @@ export const autoRefreshActions = {
 
   /**
    * Start auto-refresh for devices
+   * NOTE: Disabled to prevent excessive API calls - devices data rarely changes
    */
   startDeviceAutoRefresh(): ActionResult<void> {
-    // Stop any existing interval
-    autoRefreshActions.stopDeviceAutoRefresh();
-    
-    // Start new interval (30 seconds)
-    deviceIntervalRef = setInterval(() => {
-      devicesActions.loadAllDevices();
-    }, 30000);
-    
+    console.log('🚫 Device auto-refresh disabled to prevent excessive API calls');
     return { success: true };
   },
 
