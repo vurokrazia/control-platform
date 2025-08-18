@@ -12,7 +12,12 @@ router.use((req, res, next) => {
     return next();
   }
   
-  // Require authentication for all other endpoints
+  // Use fast JWT-only authentication for MQTT publish endpoints
+  if (req.path.includes('/mqtt-topics/publish')) {
+    return authMiddleware.requireAuthFast(req, res, next);
+  }
+  
+  // Require full authentication for all other endpoints
   return authMiddleware.requireAuth(req, res, next);
 });
 

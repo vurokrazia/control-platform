@@ -32,7 +32,8 @@ export class SessionService {
   public async createSession(
     userId: string,
     userAgent?: string,
-    ipAddress?: string
+    ipAddress?: string,
+    userData?: any
   ): Promise<{ token: string; session: SessionEntity }> {
     // Create session entity
     const session = new SessionEntity(
@@ -40,7 +41,12 @@ export class SessionService {
       this.sessionTTLSeconds / (24 * 60 * 60), // Convert seconds to days
       undefined,
       userAgent,
-      ipAddress
+      ipAddress,
+      undefined, // createdAt
+      undefined, // lastActivity  
+      undefined, // expiresAt
+      true, // isActive
+      userData // Cache user data in session
     );
 
     // Store session in Redis
@@ -106,8 +112,11 @@ export class SessionService {
         };
       }
 
-      // Update last activity
-      await this.updateSessionActivity(session.sessionId);
+      // Update last activity only if it's been more than 5 minutes
+      const lastActivityMinutesAgo = (Date.now() - session.lastActivity.getTime()) / (1000 * 60);
+      if (lastActivityMinutesAgo > 5) {
+        await this.updateSessionActivity(session.sessionId);
+      }
 
       return {
         isValid: true,

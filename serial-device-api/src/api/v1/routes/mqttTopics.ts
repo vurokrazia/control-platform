@@ -1,12 +1,10 @@
 import express from 'express';
 import { MqttTopicController } from '../controllers/MqttTopicController';
-import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = express.Router();
 const mqttTopicController = new MqttTopicController();
 
-// Apply authentication middleware
-router.use(authMiddleware.requireAuth);
+// Authentication already applied at higher level - no need to apply again
 
 /**
  * @swagger

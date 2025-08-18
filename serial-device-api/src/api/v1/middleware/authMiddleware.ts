@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 import { AuthService } from '../../../domain/services/AuthService';
 import { UserRepository } from '../../../infrastructure/database/repositories/UserRepository';
 import { User } from '../../../domain/entities/User';
@@ -18,6 +19,7 @@ declare global {
 interface AuthMiddlewareOptions {
   required?: boolean;
   roles?: string[];
+  jwtOnly?: boolean; // Fast JWT-only validation for high-frequency endpoints
 }
 
 export class AuthMiddleware {
@@ -31,16 +33,23 @@ export class AuthMiddleware {
   // Main authentication middleware
   public authenticate = (options: AuthMiddlewareOptions = { required: true }) => {
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const authStartTime = Date.now();
+      console.log(`🔐 [${new Date().toISOString()}] AUTH MIDDLEWARE START - ${req.method} ${req.path}`);
+      
       try {
         const token = this.extractToken(req);
 
         // If no token and auth is not required, continue
         if (!token && !options.required) {
+          const authEndTime = Date.now();
+          console.log(`✅ [${new Date().toISOString()}] AUTH MIDDLEWARE END (NO TOKEN REQUIRED) - Duration: ${authEndTime - authStartTime}ms`);
           return next();
         }
 
         // If no token and auth is required, return unauthorized
         if (!token && options.required) {
+          const authEndTime = Date.now();
+          console.log(`❌ [${new Date().toISOString()}] AUTH MIDDLEWARE END (NO TOKEN) - Duration: ${authEndTime - authStartTime}ms`);
           res.status(401).json({
             success: false,
             error: 'Access token is required',
@@ -51,10 +60,23 @@ export class AuthMiddleware {
           return;
         }
 
-        // Validate token
-        const validation = await this.authService.validateToken(token!);
+        // Validate token - use fast JWT-only mode for high-frequency endpoints
+        const tokenValidationStartTime = Date.now();
+        console.log(`🔍 [${new Date().toISOString()}] TOKEN VALIDATION START - Mode: ${options.jwtOnly ? 'JWT-ONLY' : 'FULL'}`);
+        
+        let validation;
+        if (options.jwtOnly) {
+          validation = await this.validateJwtOnly(token!);
+        } else {
+          validation = await this.authService.validateToken(token!);
+        }
+        
+        const tokenValidationEndTime = Date.now();
+        console.log(`🔍 [${new Date().toISOString()}] TOKEN VALIDATION END - Duration: ${tokenValidationEndTime - tokenValidationStartTime}ms`);
 
         if (!validation.isValid) {
+          const authEndTime = Date.now();
+          console.log(`❌ [${new Date().toISOString()}] AUTH MIDDLEWARE END (INVALID TOKEN) - Duration: ${authEndTime - authStartTime}ms`);
           res.status(401).json({
             success: false,
             error: 'Invalid or expired token',
@@ -84,9 +106,13 @@ export class AuthMiddleware {
           // }
         }
 
+        const authEndTime = Date.now();
+        console.log(`✅ [${new Date().toISOString()}] AUTH MIDDLEWARE END (SUCCESS) - Duration: ${authEndTime - authStartTime}ms`);
         next();
 
       } catch (error) {
+        const authEndTime = Date.now();
+        console.log(`❌ [${new Date().toISOString()}] AUTH MIDDLEWARE END (ERROR) - Duration: ${authEndTime - authStartTime}ms`);
         console.error('Authentication middleware error:', error);
         res.status(500).json({
           success: false,
@@ -117,12 +143,60 @@ export class AuthMiddleware {
     return authHeader;
   }
 
+  // Fast JWT-only validation (no Redis/DB calls)
+  private async validateJwtOnly(token: string): Promise<{
+    isValid: boolean;
+    user?: any;
+    session?: any;
+    error?: string;
+  }> {
+    try {
+      const jwtSecret = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+      const decoded = jwt.verify(token, jwtSecret) as any;
+      
+      if (!decoded.sessionId || !decoded.userId) {
+        return {
+          isValid: false,
+          error: 'Invalid token payload'
+        };
+      }
+
+      // Create minimal user object from JWT claims
+      const user = {
+        id: decoded.userId,
+        isActive: true // Assume active for JWT-only validation
+      };
+
+      return {
+        isValid: true,
+        user,
+        session: { sessionId: decoded.sessionId, userId: decoded.userId }
+      };
+
+    } catch (error) {
+      if (error instanceof jwt.JsonWebTokenError || error instanceof jwt.TokenExpiredError) {
+        return {
+          isValid: false,
+          error: 'Invalid or expired token'
+        };
+      }
+      
+      return {
+        isValid: false,
+        error: 'Token validation failed'
+      };
+    }
+  }
+
   // Convenience methods for common use cases
   public requireAuth = this.authenticate({ required: true });
   
   public optionalAuth = this.authenticate({ required: false });
 
   public requireRole = (roles: string[]) => this.authenticate({ required: true, roles });
+
+  // Fast authentication for high-frequency endpoints
+  public requireAuthFast = this.authenticate({ required: true, jwtOnly: true });
 
   // Middleware to check if user is active
   public requireActiveUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

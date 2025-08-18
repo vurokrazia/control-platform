@@ -9,6 +9,8 @@ import apiRoutes from './api';
 import swaggerOptions from './config/swagger-config';
 import { mqttServiceInstance } from './shared/MqttServiceInstance';
 import { MqttTopicRepository } from './infrastructure/database/repositories/MqttTopicRepository';
+import { MqttWorker } from './infrastructure/queue/MqttWorker';
+import { MqttQueue } from './infrastructure/queue/MqttQueue';
 
 dotenv.config();
 
@@ -30,8 +32,17 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use((req: Request, _res: Response, next: NextFunction) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const requestStartTime = Date.now();
+  console.log(`🌐 [${new Date().toISOString()}] SERVER REQUEST START - ${req.method} ${req.path}`);
+  
+  // Add end timing when response finishes
+  res.on('finish', () => {
+    const requestEndTime = Date.now();
+    const duration = requestEndTime - requestStartTime;
+    console.log(`🌐 [${new Date().toISOString()}] SERVER REQUEST END - ${req.method} ${req.path} - Status: ${res.statusCode} - Duration: ${duration}ms`);
+  });
+  
   next();
 });
 
@@ -138,6 +149,20 @@ async function startServer() {
       console.log('📭 No MQTT topics found in database');
     }
     
+    // Start background MQTT worker (if Redis is available)
+    try {
+      const mqttQueue = MqttQueue.getInstance();
+      if (mqttQueue.isQueueAvailable()) {
+        const mqttWorker = MqttWorker.getInstance();
+        await mqttWorker.start();
+        console.log('🔄 MQTT background worker started');
+      } else {
+        console.log('⚠️  MQTT background worker disabled - using direct publish mode');
+      }
+    } catch (error) {
+      console.log('⚠️  MQTT background worker failed to start - using direct publish mode');
+    }
+    
     app.listen(PORT, () => {
       console.log(`🚀 Arduino MQTT Control Platform API running on port ${PORT}`);
       console.log(`📡 API endpoints available at http://localhost:${PORT}`);
@@ -157,6 +182,19 @@ startServer();
 process.on('SIGTERM', async () => {
   console.log('🛑 Shutting down server...');
   try {
+    // Stop MQTT worker (if it was started)
+    try {
+      const mqttQueue = MqttQueue.getInstance();
+      if (mqttQueue.isQueueAvailable()) {
+        const mqttWorker = MqttWorker.getInstance();
+        await mqttWorker.close();
+        console.log('✅ MQTT worker stopped');
+      }
+      await mqttQueue.close();
+    } catch (error) {
+      // Worker wasn't started, ignore
+    }
+    
     // Disconnect MQTT
     mqttServiceInstance.disconnect();
     
@@ -184,6 +222,19 @@ process.on('SIGTERM', async () => {
 process.on('SIGINT', async () => {
   console.log('🛑 Shutting down server...');
   try {
+    // Stop MQTT worker (if it was started)
+    try {
+      const mqttQueue = MqttQueue.getInstance();
+      if (mqttQueue.isQueueAvailable()) {
+        const mqttWorker = MqttWorker.getInstance();
+        await mqttWorker.close();
+        console.log('✅ MQTT worker stopped');
+      }
+      await mqttQueue.close();
+    } catch (error) {
+      // Worker wasn't started, ignore
+    }
+    
     // Disconnect MQTT
     mqttServiceInstance.disconnect();
     

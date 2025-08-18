@@ -9,6 +9,7 @@ export interface SessionData {
   lastActivity: Date;
   expiresAt: Date;
   isActive: boolean;
+  userData?: any; // Cache user data to avoid DB queries
 }
 
 export class SessionEntity implements SessionData {
@@ -20,6 +21,7 @@ export class SessionEntity implements SessionData {
   public lastActivity: Date;
   public expiresAt: Date;
   public isActive: boolean;
+  public userData?: any; // Cache user data to avoid DB queries
 
   constructor(
     userId: string,
@@ -30,7 +32,8 @@ export class SessionEntity implements SessionData {
     createdAt?: Date,
     lastActivity?: Date,
     expiresAt?: Date,
-    isActive: boolean = true
+    isActive: boolean = true,
+    userData?: any
   ) {
     this.sessionId = sessionId || uuidv4();
     this.userId = userId;
@@ -40,6 +43,7 @@ export class SessionEntity implements SessionData {
     this.lastActivity = lastActivity || new Date();
     this.expiresAt = expiresAt || new Date(Date.now() + expirationDays * 24 * 60 * 60 * 1000);
     this.isActive = isActive;
+    this.userData = userData;
   }
 
   public updateActivity(): void {
@@ -69,7 +73,8 @@ export class SessionEntity implements SessionData {
       createdAt: this.createdAt.toISOString(),
       lastActivity: this.lastActivity.toISOString(),
       expiresAt: this.expiresAt.toISOString(),
-      isActive: this.isActive.toString()
+      isActive: this.isActive.toString(),
+      userData: this.userData ? JSON.stringify(this.userData) : ''
     };
   }
 
@@ -83,7 +88,8 @@ export class SessionEntity implements SessionData {
       new Date(data.createdAt),
       new Date(data.lastActivity),
       new Date(data.expiresAt),
-      data.isActive === 'true'
+      data.isActive === 'true',
+      data.userData ? JSON.parse(data.userData) : undefined
     );
   }
 }

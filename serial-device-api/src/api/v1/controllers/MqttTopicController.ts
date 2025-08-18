@@ -2,16 +2,18 @@ import { Request, Response } from 'express';
 import { MqttTopicRepository } from '../../../infrastructure/database/repositories/MqttTopicRepository';
 import { TopicMessageRepository } from '../../../infrastructure/database/repositories/TopicMessageRepository';
 import { MqttTopic } from '../../../domain/entities/MqttTopic';
-import { TopicMessage } from '../../../domain/entities/TopicMessage';
 import { mqttServiceInstance } from '../../../shared/MqttServiceInstance';
+import { MqttQueue } from '../../../infrastructure/queue/MqttQueue';
 
 export class MqttTopicController {
   private mqttTopicRepository: MqttTopicRepository;
   private topicMessageRepository: TopicMessageRepository;
+  private mqttQueue: MqttQueue;
 
   constructor() {
     this.mqttTopicRepository = new MqttTopicRepository();
     this.topicMessageRepository = new TopicMessageRepository();
+    this.mqttQueue = MqttQueue.getInstance();
   }
   
   /**
@@ -489,7 +491,7 @@ export class MqttTopicController {
    *     tags:
    *       - MQTT Topics
    *     summary: Publish a message to an MQTT topic
-   *     description: Publishes a message to the specified MQTT topic and saves it to the database
+   *     description: Queues a message for background publishing to the specified MQTT topic and saves it to the database immediately for fast response
    *     security:
    *       - bearerAuth: []
    *     requestBody:
@@ -613,6 +615,9 @@ export class MqttTopicController {
    *                   error: "Error publishing message"
    */
   public async publishMessage(req: Request, res: Response): Promise<void> {
+    const startTime = Date.now();
+    console.log(`🕐 [${new Date().toISOString()}] PUBLISH START - Topic: ${req.body.topic}`);
+    
     try {
       const { topic, message } = req.body;
       const user = req.user;
@@ -636,6 +641,7 @@ export class MqttTopicController {
         return;
       }
 
+      // TODO: This database call makes API slow - consider removing for instant responses
       // Find topic to get its ID - from all topics
       const topics = await this.mqttTopicRepository.findAll();
       const topicEntity = topics.find(t => t.name === topic);
@@ -644,25 +650,30 @@ export class MqttTopicController {
         res.status(404).json({ success: false, error: 'Topic not found or access denied' });
         return;
       }
-
-      // Publish message to MQTT topic with userId in payload first
-      const mqttPayload = JSON.stringify({ message: message, userId: userId });
+      // Alternative: Remove validation here and let background worker handle invalid topics
       
-      try {
-        mqttServiceInstance.publish(topic, mqttPayload);
-        
-        // Only save to database after successful MQTT publish
-        const topicMessage = new TopicMessage(message, topicEntity.id, userId);
-        await this.topicMessageRepository.create(topicMessage);
-      } catch (mqttError) {
-        console.error('Failed to publish to MQTT:', mqttError);
-        res.status(500).json({ success: false, error: 'Failed to publish message to MQTT topic' });
-        return;
-      }
+      // Add message to background queue for database save AND MQTT publish (fire-and-forget)
+      this.mqttQueue.publishMessage({
+        topic: topic,
+        message: message,
+        userId: userId,
+        topicEntityId: topicEntity.id, // Include topic entity ID for database save
+        qos: 0,
+        retain: false
+      }).catch(queueError => {
+        console.error('Failed to queue MQTT message:', queueError);
+        // Don't fail the API response, just log the error
+      });
+      
+      console.log(`Message queued for background processing: ${topic}`);
+      
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      console.log(`🕑 [${new Date().toISOString()}] PUBLISH END - Topic: ${topic} - Duration: ${duration}ms`);
       
       res.status(200).json({ 
         success: true, 
-        message: `Message published to topic '${topic}'`,
+        message: `Message queued for publishing to topic '${topic}'`,
         data: {
           topic: topic,
           message: message,
@@ -670,7 +681,9 @@ export class MqttTopicController {
         }
       });
     } catch (error) {
-      console.error('Error publishing message:', error);
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      console.error(`🕑 [${new Date().toISOString()}] PUBLISH ERROR - Duration: ${duration}ms - Error:`, error);
       res.status(500).json({ success: false, error: 'Error publishing message' });
     }
   }

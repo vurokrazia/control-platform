@@ -72,6 +72,12 @@ export class MqttService {
                             actualMessage = payload.message;
                             userId = payload.userId;
                             console.log(`📦 Parsed JSON payload with userId: ${userId}`);
+                            
+                            // Check if message was already saved by worker
+                            if (payload._alreadySaved) {
+                                console.log(`⏭️ Message already saved by background worker, skipping duplicate save`);
+                                return; // Skip saving to database
+                            }
                         } else {
                             throw new Error('Invalid JSON payload format');
                         }

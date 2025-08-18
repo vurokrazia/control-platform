@@ -115,18 +115,22 @@ export class AuthService {
       // Save user to database (password will be hashed by pre-save middleware)
       const savedUser = await this.userRepository.create(newUser);
 
-      // Create session and JWT token
+      // Remove password before caching in session
+      const { password: _pwd1, ...userForSession } = savedUser;
+
+      // Create session and JWT token with user data cached
       const { token, session } = await this.sessionService.createSession(
         savedUser.id,
         userAgent,
-        ipAddress
+        ipAddress,
+        userForSession // Cache user data in session
       );
 
       // Update last login
       await this.userRepository.updateLastLogin(savedUser.id);
 
       // Remove password from response
-      const { password: _, ...userResponse } = savedUser;
+      const { password: _pwd2, ...userResponse } = savedUser;
 
       return {
         success: true,
@@ -180,18 +184,22 @@ export class AuthService {
         };
       }
 
-      // Create session and JWT token
+      // Remove password before caching in session
+      const { password: _pwd3, ...userForSession } = user;
+
+      // Create session and JWT token with user data cached
       const { token, session } = await this.sessionService.createSession(
         user.id,
         userAgent,
-        ipAddress
+        ipAddress,
+        userForSession // Cache user data in session
       );
 
       // Update last login
       await this.userRepository.updateLastLogin(user.id);
 
       // Remove password from response
-      const { password: __, ...userResponse } = user;
+      const { password: _pwd4, ...userResponse } = user;
 
       return {
         success: true,
@@ -255,28 +263,45 @@ export class AuthService {
         };
       }
 
-      // Get user details
-      const user = await this.userRepository.findById(validation.userId!);
-      if (!user) {
-        return {
-          isValid: false,
-          error: 'User not found'
-        };
-      }
+      // Use cached user data from session if available
+      let userResponse: Omit<User, 'password'>;
+      
+      if (validation.session?.userData) {
+        // Use cached user data - much faster!
+        userResponse = validation.session.userData;
+        
+        // Quick validation of cached user data
+        if (!userResponse.isActive) {
+          return {
+            isValid: false,
+            error: 'User account is deactivated'
+          };
+        }
+      } else {
+        // Fallback to database query if no cached data (for old sessions)
+        const user = await this.userRepository.findById(validation.userId!);
+        if (!user) {
+          return {
+            isValid: false,
+            error: 'User not found'
+          };
+        }
 
-      if (!user.isActive) {
-        return {
-          isValid: false,
-          error: 'User account is deactivated'
-        };
-      }
+        if (!user.isActive) {
+          return {
+            isValid: false,
+            error: 'User account is deactivated'
+          };
+        }
 
-      // Remove password from response
-      const { password: ___, ...userResponse } = user;
+        // Remove password from response
+        const { password: _pwd5, ...cleanUser } = user;
+        userResponse = cleanUser as Omit<User, 'password'>;
+      }
 
       return {
         isValid: true,
-        user: userResponse as Omit<User, 'password'>,
+        user: userResponse,
         session: validation.session!
       };
 
