@@ -177,9 +177,30 @@ void callback(char* topic, byte* payload, unsigned int length) {
     return;
   }
   
-  // Extract command and speed (optional)
-  String command = doc["command"] | "";
-  int new_speed = doc["speed"] | -1;
+  // Check if command is inside "message" field
+  String innerMessage = doc["message"] | "";
+  String command = "";
+  int new_speed = -1;
+  
+  if (innerMessage != "") {
+    // Parse the inner message
+    JsonDocument innerDoc;
+    DeserializationError innerError = deserializeJson(innerDoc, innerMessage);
+    
+    if (!innerError) {
+      command = innerDoc["command"] | "";
+      new_speed = innerDoc["speed"] | -1;
+    }
+  } else {
+    // Direct command format
+    command = doc["command"] | "";
+    new_speed = doc["speed"] | -1;
+  }
+  
+  Serial.println("Extracted command: " + command);
+  if (new_speed != -1) {
+    Serial.println("Extracted speed: " + String(new_speed));
+  }
   
   // Change speed if specified
   if (new_speed != -1) {
