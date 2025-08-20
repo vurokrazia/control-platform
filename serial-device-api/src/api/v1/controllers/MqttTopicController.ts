@@ -659,7 +659,8 @@ export class MqttTopicController {
         userId: userId,
         topicEntityId: topicEntity.id, // Include topic entity ID for database save
         qos: 0,
-        retain: false
+        retain: false,
+        delay: 7000,
       }).catch(queueError => {
         console.error('Failed to queue MQTT message:', queueError);
         // Don't fail the API response, just log the error
