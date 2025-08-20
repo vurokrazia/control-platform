@@ -82,6 +82,7 @@
   "mqtt": {
     "connection": {
       "title": "MQTT Message Monitor",
+      "titleCommands": "Command control MQTT",
       "broker": "MQTT Broker",
       "port": "Port",
       "username": "Username",

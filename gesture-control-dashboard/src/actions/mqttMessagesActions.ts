@@ -49,7 +49,6 @@ export const mqttMessagesActions = {
       const errorMessage = error instanceof Error ? error.message : 'Failed to publish message';
       useMqttMessagesStore.setState({ error: errorMessage });
       setPublishingLoading(false);
-      
       return { success: false, error: errorMessage };
     }
   },

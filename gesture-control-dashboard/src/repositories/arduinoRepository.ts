@@ -83,12 +83,40 @@ export interface ApiResponse<T = any> {
 }
 
 class ArduinoRepository {
+  // Cache for server availability check
+  private serverAvailabilityCache: {
+    isAvailable: boolean;
+    timestamp: number;
+    ttl: number; // 30 seconds
+  } | null = null;
+
+  // Cache for ports data
+  private portsCache: {
+    ports: Port[];
+    timestamp: number;
+    ttl: number; // 10 seconds
+  } | null = null;
+
   // Listar puertos disponibles
   async getPorts(): Promise<Port[]> {
+    // Check cache first
+    const now = Date.now();
+    if (this.portsCache && (now - this.portsCache.timestamp) < this.portsCache.ttl) {
+      console.log('📦 Using cached ports data');
+      return this.portsCache.ports;
+    }
+
     try {
+      console.log('🔄 Fetching fresh ports data from API');
       const response = await api.get<ApiResponse<Port[]>>('/v1/serial-ports');
       
       if (response.data.success && response.data.data) {
+        // Update cache
+        this.portsCache = {
+          ports: response.data.data,
+          timestamp: now,
+          ttl: 10000 // 10 seconds
+        };
         return response.data.data;
       }
       
@@ -218,13 +246,46 @@ class ArduinoRepository {
 
   // Verificar si el servidor está disponible
   async checkConnection(): Promise<boolean> {
+    // Check cache first
+    const now = Date.now();
+    if (this.serverAvailabilityCache && (now - this.serverAvailabilityCache.timestamp) < this.serverAvailabilityCache.ttl) {
+      console.log('📦 Using cached server availability:', this.serverAvailabilityCache.isAvailable);
+      return this.serverAvailabilityCache.isAvailable;
+    }
+
     try {
+      console.log('🔄 Checking server availability from API');
       const response = await api.get('/v1/');
-      return response.status === 200;
+      const isAvailable = response.status === 200;
+      
+      // Update cache
+      this.serverAvailabilityCache = {
+        isAvailable,
+        timestamp: now,
+        ttl: 30000 // 30 seconds
+      };
+      
+      console.log('📡 Server availability check result:', isAvailable);
+      return isAvailable;
     } catch (error) {
       console.error('Server not available:', error);
+      
+      // Cache negative result for shorter time
+      this.serverAvailabilityCache = {
+        isAvailable: false,
+        timestamp: now,
+        ttl: 5000 // 5 seconds for failures
+      };
+      
       return false;
     }
+  }
+
+  // Clear caches when needed
+  clearCaches(): void {
+    this.serverAvailabilityCache = null;
+    this.portsCache = null;
+    console.log('🗑️ Arduino repository caches cleared');
   }
 }
 

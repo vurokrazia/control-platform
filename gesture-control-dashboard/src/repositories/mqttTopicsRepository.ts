@@ -16,7 +16,8 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log(`🔄 MQTT Request: ${config.method?.toUpperCase()} ${config.url}`);
+    // Temporarily disable logging
+    // console.log(`🔄 MQTT Request: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => {
@@ -28,7 +29,8 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
-    console.log(`✅ MQTT Response: ${response.status} ${response.config.url}`);
+    // Temporarily disable logging
+    // console.log(`✅ MQTT Response: ${response.status} ${response.config.url}`);
     return response;
   },
   (error) => {
@@ -84,12 +86,40 @@ export interface ApiResponse<T = any> {
 }
 
 class MqttTopicsRepository {
+  // Cache for topics data
+  private topicsCache: {
+    topics: MqttTopic[];
+    timestamp: number;
+    ttl: number; // 15 seconds
+  } | null = null;
+
+  // Cache for connection check
+  private connectionCache: {
+    isConnected: boolean;
+    timestamp: number;
+    ttl: number; // 30 seconds
+  } | null = null;
+
   // Get all MQTT topics
   async getAllTopics(): Promise<MqttTopic[]> {
+    // Check cache first
+    const now = Date.now();
+    if (this.topicsCache && (now - this.topicsCache.timestamp) < this.topicsCache.ttl) {
+      console.log('📦 Using cached MQTT topics data');
+      return this.topicsCache.topics;
+    }
+
     try {
+      console.log('🔄 Fetching fresh MQTT topics from API');
       const response = await api.get<ApiResponse<MqttTopic[]>>('/v1/mqtt-topics');
       
       if (response.data.success && response.data.data) {
+        // Update cache
+        this.topicsCache = {
+          topics: response.data.data,
+          timestamp: now,
+          ttl: 15000 // 15 seconds
+        };
         return response.data.data;
       }
       
@@ -110,6 +140,8 @@ class MqttTopicsRepository {
       const response = await api.post<ApiResponse<MqttTopic>>('/v1/mqtt-topics', { name, deviceId, autoSubscribe });
 
       if (response.data.success && response.data.data) {
+        // Clear cache since data changed
+        this.clearTopicsCache();
         return response.data.data;
       }
 
@@ -130,6 +162,8 @@ class MqttTopicsRepository {
       const response = await api.put<ApiResponse<MqttTopic>>(`/v1/mqtt-topics/${topicId}`, { autoSubscribe });
 
       if (response.data.success && response.data.data) {
+        // Clear cache since data changed
+        this.clearTopicsCache();
         return response.data.data;
       }
 
@@ -150,6 +184,8 @@ class MqttTopicsRepository {
       const response = await api.delete<ApiResponse>(`/v1/mqtt-topics/${topicId}`);
 
       if (response.data.success) {
+        // Clear cache since data changed
+        this.clearTopicsCache();
         return response.data.message || 'Topic deleted successfully';
       }
 
@@ -166,11 +202,28 @@ class MqttTopicsRepository {
 
   // Publish message to MQTT topic
   async publishMessage(topicName: string, message: string): Promise<string> {
+    const requestStartTime = Date.now();
+    console.log(`🚀 [${new Date().toISOString()}] FRONTEND API REQUEST START - Topic: ${topicName}`);
+    
     try {
+      // COMMENTED OUT REAL API CALL FOR FRONTEND PERFORMANCE TESTING
       const response = await api.post<ApiResponse<any>>('/v1/mqtt-topics/publish', { 
         topic: topicName,
         message 
       });
+
+      // DUMMY RESPONSE - SIMULATE FAST API
+      // await new Promise(resolve => setTimeout(resolve, 5)); // Simulate 5ms network delay
+      // const response = {
+      //   data: {
+      //     success: true,
+      //     message: `DUMMY: Message published to topic '${topicName}'`
+      //   }
+      // };
+
+      const requestEndTime = Date.now();
+      const duration = requestEndTime - requestStartTime;
+      console.log(`🏁 [${new Date().toISOString()}] FRONTEND API REQUEST FINISH - Topic: ${topicName} - Duration: ${duration}ms`);
 
       if (response.data.success) {
         return response.data.message || 'Message published successfully';
@@ -178,7 +231,10 @@ class MqttTopicsRepository {
 
       throw new Error(response.data.error || 'Error publishing message');
     } catch (error) {
-      console.error('Error publishing message:', error);
+      const requestEndTime = Date.now();
+      const duration = requestEndTime - requestStartTime;
+      console.error(`❌ [${new Date().toISOString()}] FRONTEND API REQUEST ERROR - Topic: ${topicName} - Duration: ${duration}ms`, error);
+      
       throw new Error(
         axios.isAxiosError(error) && error.response?.data?.error
           ? error.response.data.error
@@ -229,13 +285,55 @@ class MqttTopicsRepository {
 
   // Check if MQTT API is available
   async checkConnection(): Promise<boolean> {
+    // Check cache first
+    const now = Date.now();
+    if (this.connectionCache && (now - this.connectionCache.timestamp) < this.connectionCache.ttl) {
+      console.log('📦 Using cached MQTT connection status:', this.connectionCache.isConnected);
+      return this.connectionCache.isConnected;
+    }
+
     try {
+      console.log('🔄 Checking MQTT API connection');
       const response = await api.get('/v1/mqtt-topics');
-      return response.status === 200;
+      const isConnected = response.status === 200;
+      
+      // Update cache
+      this.connectionCache = {
+        isConnected,
+        timestamp: now,
+        ttl: 30000 // 30 seconds
+      };
+      
+      console.log('📡 MQTT API connection result:', isConnected);
+      return isConnected;
     } catch (error) {
       console.error('MQTT API not available:', error);
+      
+      // Cache negative result for shorter time
+      this.connectionCache = {
+        isConnected: false,
+        timestamp: now,
+        ttl: 5000 // 5 seconds for failures
+      };
+      
       return false;
     }
+  }
+
+  // Clear caches when data changes
+  clearTopicsCache(): void {
+    this.topicsCache = null;
+    console.log('🗑️ MQTT topics cache cleared');
+  }
+
+  clearConnectionCache(): void {
+    this.connectionCache = null;
+    console.log('🗑️ MQTT connection cache cleared');
+  }
+
+  clearAllCaches(): void {
+    this.clearTopicsCache();
+    this.clearConnectionCache();
   }
 }
 

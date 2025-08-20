@@ -55,10 +55,13 @@ export const useArduino = () => {
   // Verificar disponibilidad del servidor
   const checkServerAvailability = useCallback(async () => {
     try {
+      console.log('📡 Checking Arduino server availability...');
       const isAvailable = await arduinoRepository.checkConnection();
       setState(prev => ({ ...prev, isServerAvailable: isAvailable }));
+      console.log('📡 Arduino server availability result:', isAvailable);
       return isAvailable;
     } catch (error) {
+      console.error('❌ Arduino server availability check failed:', error);
       setState(prev => ({ 
         ...prev, 
         isServerAvailable: false,
@@ -306,7 +309,12 @@ export const useArduino = () => {
   // Efecto para cargar puertos cuando el servidor esté disponible
   useEffect(() => {
     if (state.isServerAvailable && state.ports.length === 0) {
-      loadPorts().catch(console.error);
+      // Add small delay to avoid immediate API calls after server check
+      const timeoutId = setTimeout(() => {
+        loadPorts().catch(console.error);
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [state.isServerAvailable, state.ports.length, loadPorts]);
 
@@ -322,7 +330,7 @@ export const useArduino = () => {
 
     const interval = setInterval(() => {
       refreshStatus().catch(console.error);
-    }, 3000); // Refrescar cada 3 segundos
+    }, 10000); // Refrescar cada 10 segundos (reduced from 3 seconds)
 
     return () => {
       console.log('🛑 Deteniendo monitoreo automático del estado');

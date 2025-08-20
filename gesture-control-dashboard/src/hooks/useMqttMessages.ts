@@ -1,6 +1,7 @@
 import { useMqttMessagesStore } from '../stores/mqttMessagesStore';
 import { useUiStore } from '../stores/uiStore';
 import { mqttMessagesActions } from '../actions/mqttMessagesActions';
+import { useMemo } from 'react';
 
 /**
  * HOOKS LAYER - Clean API facade for MQTT Messages
@@ -16,29 +17,32 @@ export const useMqttMessages = () => {
   // UI state selectors
   const isPublishing = useUiStore(state => state.loading.publishing);
 
-  // Computed state - derived values
-  const hasLastMessage = !!lastMessage;
+  // Memoize the return object to prevent new references on every render
+  return useMemo(() => {
+    // Computed state - derived values
+    const hasLastMessage = !!lastMessage;
 
-  return {
-    // STATE - Everything the component needs to render
-    state: {
-      lastMessage,
-      lastTopic,
-      isPublishing,
-      error,
-      // Computed values
-      hasLastMessage
-    },
+    return {
+      // STATE - Everything the component needs to render
+      state: {
+        lastMessage,
+        lastTopic,
+        isPublishing,
+        error,
+        // Computed values
+        hasLastMessage
+      },
 
-    // ACTIONS - Clean function references (no business logic)
-    actions: {
-      publishMessage: mqttMessagesActions.publishMessage,
-      sendCommand: mqttMessagesActions.sendCommand,
-      sendCustomMessage: mqttMessagesActions.sendCustomMessage,
-      sendCommandWithSpeed: mqttMessagesActions.sendCommandWithSpeed,
-      clearError: mqttMessagesActions.clearError,
-      clearLastMessage: mqttMessagesActions.clearLastMessage,
-      handleCustomFormSubmit: mqttMessagesActions.handleCustomFormSubmit
-    }
-  };
+      // ACTIONS - Clean function references (no business logic)
+      actions: {
+        publishMessage: mqttMessagesActions.publishMessage,
+        sendCommand: mqttMessagesActions.sendCommand,
+        sendCustomMessage: mqttMessagesActions.sendCustomMessage,
+        sendCommandWithSpeed: mqttMessagesActions.sendCommandWithSpeed,
+        clearError: mqttMessagesActions.clearError,
+        clearLastMessage: mqttMessagesActions.clearLastMessage,
+        handleCustomFormSubmit: mqttMessagesActions.handleCustomFormSubmit
+      }
+    };
+  }, [lastMessage, lastTopic, isPublishing, error]);
 };
